@@ -40,10 +40,18 @@
 - 운영 설정은 secret이 아닌 `HANNAH_AI_BASE_URL` 또는 기본 내부 서비스명으로 처리
 - 테스트에서 토큰 헤더 미전송, stock universe payload, 분석 응답 매핑을 검증
 
+## 2026-06-04 알림 분석 후 발행 endpoint
+- `/api/v1/alerts/analyze-and-publish` endpoint 추가
+- 수집된 뉴스·공시 원문과 종목 universe를 Hannah-Montana-AI에 전달하고 분석 결과를 WebSocket 알림 이벤트로 변환
+- AI가 종목을 매핑하지 못하면 `422 Unprocessable Entity`로 발행을 중단
+- 번역 어댑터가 붙기 전까지 `translatedTitle`은 원문 제목으로 대체
+- MockMvc 테스트로 AI 분석 결과가 기존 알림 이벤트 payload로 발행되는지 검증
+
 ## 현재 구현 로직
 - 시장 데이터는 공공데이터 주식시세 snapshot을 우선 사용하고, 사용할 수 없으면 fallback 데이터로 표준 응답 구조를 유지한다.
 - 현지 통화 환산가는 `currentPriceKrw * fxRate`로 계산한다.
 - 알림 이벤트는 `/api/v1/alerts/events`로 수신한 뒤 `/topic/partners/{partnerId}/alerts`, `/topic/stocks/{stockCode}/alerts`로 전송한다.
+- 알림 분석 발행 endpoint는 AI 분석 결과를 받아 기존 알림 이벤트 송신 로직을 재사용한다.
 - Naver News 응답의 HTML 태그와 entity를 정규화해 제목과 snippet으로 변환한다.
 - OpenDART 공시검색 응답의 접수번호로 원문 공시 URL을 생성한다.
 - 공공데이터 주식시세 응답은 첫 번째 종목 항목을 `PublicDataStockPriceSnapshot`으로 변환한다.
