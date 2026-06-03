@@ -28,6 +28,7 @@
 - `NAVER_NEWS_CLIENT_ID`: Naver News Search API Client ID
 - `NAVER_NEWS_CLIENT_SECRET`: Naver News Search API Client Secret
 - `OPEN_DART_API_KEY`: OpenDART 공시검색 API 인증키
+- `KOREA_EXIM_AUTH_KEY`: 한국수출입은행 환율 API 인증키
 - 외부 API 키는 로그, 예외 메시지, 테스트 fixture, 커밋 파일에 남기지 않는다.
 
 ## 내부 AI 통신
@@ -36,6 +37,7 @@
 - `KRX_BASE_URL`은 KRX 데이터 endpoint 주소 설정값이며 secret으로 분류하지 않는다.
 - `KIS_BASE_URL`은 KIS endpoint 주소 설정값이며 secret으로 분류하지 않는다.
 - `KIS_WEBSOCKET_URL`은 KIS WebSocket endpoint 주소 설정값이며 secret으로 분류하지 않는다.
+- `KOREA_EXIM_BASE_URL`은 한국수출입은행 endpoint 주소 설정값이며 secret으로 분류하지 않는다.
 - 별도 서비스 토큰 헤더는 사용하지 않는다.
 
 ## 향후 강화

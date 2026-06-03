@@ -24,6 +24,7 @@ docker compose -f compose.local.yml down
 - KIS 현재가 provider를 사용하려면 `KIS_APP_KEY`, `KIS_APP_SECRET`, `KIS_ACCESS_TOKEN`을 GitHub Secrets에 등록한다.
 - KIS WebSocket provider를 사용하려면 `KIS_WEBSOCKET_URL`, `KIS_APPROVAL_KEY`를 GitHub Secrets에 등록한다.
 - `KIS_APPROVAL_KEY`는 WebSocket 접속키이며 REST `KIS_ACCESS_TOKEN`과 혼용하지 않는다.
+- 한국수출입은행 환율 provider를 사용하려면 `KOREA_EXIM_AUTH_KEY`를 GitHub Secrets에 등록한다.
 - `main` push 시 GitHub Secrets로 원격 서버의 `application-prod.env`를 생성한다.
 - `main` push 시 Docker 이미지를 GHCR에 push한다.
 - 원격 서버는 GHCR에서 이미지를 pull하고 `compose.prod.yml`로 컨테이너를 실행한다.
@@ -74,6 +75,12 @@ curl -X PUT http://localhost:8080/api/v1/market/exchange-rates/USD \
   -H "Content-Type: application/json" \
   -d '{"fxRate":0.00072}'
 ```
+
+## 한국수출입은행 환율 provider
+- provider 응답의 `deal_bas_r`는 외화 기준 원화 환율이므로 내부 캐시에는 `KRW -> 현지통화` 비율로 변환해 저장한다.
+- `JPY(100)`처럼 단위가 붙은 통화는 괄호 안 단위를 분자로 사용한다.
+- 기본 endpoint는 `https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON`이다.
+- 현재 refresh service는 애플리케이션 내부 서비스 포트이며, 주기 refresh endpoint 또는 scheduler는 다음 단계에서 붙인다.
 
 ## Rate Limit
 - 기본값은 API key fingerprint당 1분에 120개 요청이다.
