@@ -147,6 +147,13 @@
 - 이 단계는 네트워크 연결 loop 이전의 계약·파서·캐시 하네스이며, 실제 WebSocket session runner는 다음 기능 단위에서 구현한다.
 - 단위 테스트로 구독 frame JSON, TR ID, payload field mapping, 실시간 cache 우선순위를 검증했다.
 
+## 2026-06-04 KIS 실시간 메시지 ingestion service
+- `RealtimeMarketDataIngestionService`를 추가해 KIS raw WebSocket frame 처리와 cache 반영을 분리했다.
+- 체결 메시지는 `KisRealtimeTradeTick`으로 파싱해 `RealtimeMarketDataCache.putTrade`에 저장한다.
+- 호가 메시지는 `KisRealtimeOrderBookSnapshot`으로 파싱해 `RealtimeMarketDataCache.putOrderBook`에 저장한다.
+- ping, 시스템 응답, 미지원 TR은 cache를 변경하지 않고 `IGNORED` 결과로 반환한다.
+- 단위 테스트로 체결 저장, 호가 저장, 미지원 메시지 무시를 검증했다.
+
 ## 현재 구현 로직
 - 시장 데이터는 KIS 실시간 체결 cache, KIS 현재가 REST, 공공데이터 주식시세 snapshot, fallback 데이터 순서로 표준 응답 구조를 유지한다.
 - 호가 응답은 KIS 실시간 호가 cache를 우선 사용하고, 없으면 mock 호가 snapshot으로 응답 구조를 유지한다.
