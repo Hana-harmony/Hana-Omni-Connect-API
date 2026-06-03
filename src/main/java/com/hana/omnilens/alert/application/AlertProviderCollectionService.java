@@ -5,10 +5,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +34,7 @@ public class AlertProviderCollectionService {
     private final OpenDartDisclosureClient openDartDisclosureClient;
     private final StockMasterRepository stockMasterRepository;
     private final AlertAnalysisPublishingService alertAnalysisPublishingService;
-    private final BoundedDedupeStore publishedSourceKeys = new BoundedDedupeStore(10_000);
+    private final AlertDedupeStore alertDedupeStore;
     private final Clock clock;
 
     @Autowired
@@ -44,12 +42,14 @@ public class AlertProviderCollectionService {
             NaverNewsClient naverNewsClient,
             OpenDartDisclosureClient openDartDisclosureClient,
             StockMasterRepository stockMasterRepository,
-            AlertAnalysisPublishingService alertAnalysisPublishingService) {
+            AlertAnalysisPublishingService alertAnalysisPublishingService,
+            AlertDedupeStore alertDedupeStore) {
         this(
                 naverNewsClient,
                 openDartDisclosureClient,
                 stockMasterRepository,
                 alertAnalysisPublishingService,
+                alertDedupeStore,
                 Clock.system(KOREA_ZONE));
     }
 
@@ -58,11 +58,13 @@ public class AlertProviderCollectionService {
             OpenDartDisclosureClient openDartDisclosureClient,
             StockMasterRepository stockMasterRepository,
             AlertAnalysisPublishingService alertAnalysisPublishingService,
+            AlertDedupeStore alertDedupeStore,
             Clock clock) {
         this.naverNewsClient = naverNewsClient;
         this.openDartDisclosureClient = openDartDisclosureClient;
         this.stockMasterRepository = stockMasterRepository;
         this.alertAnalysisPublishingService = alertAnalysisPublishingService;
+        this.alertDedupeStore = alertDedupeStore;
         this.clock = clock;
     }
 
@@ -163,7 +165,7 @@ public class AlertProviderCollectionService {
             CollectionCounters counters,
             List<AlertEvent> events) {
         String sourceKey = partnerId + ":" + sourceType + ":" + originalUrl;
-        if (!publishedSourceKeys.markIfFirst(sourceKey)) {
+        if (!alertDedupeStore.markIfFirst(sourceKey)) {
             counters.skippedDuplicateCount++;
             return;
         }
@@ -182,7 +184,7 @@ public class AlertProviderCollectionService {
                             stock.stockNameEn(),
                             List.of(stock.stockNameEn()))))));
         } catch (ResponseStatusException exception) {
-            publishedSourceKeys.remove(sourceKey);
+            alertDedupeStore.remove(sourceKey);
             counters.failedAnalysisCount++;
         }
     }
@@ -192,34 +194,5 @@ public class AlertProviderCollectionService {
         private int collectedDisclosureCount;
         private int skippedDuplicateCount;
         private int failedAnalysisCount;
-    }
-
-    private static class BoundedDedupeStore {
-
-        private final int maxEntries;
-        private final Map<String, Boolean> keys;
-
-        BoundedDedupeStore(int maxEntries) {
-            this.maxEntries = maxEntries;
-            this.keys = new LinkedHashMap<>() {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
-                    return size() > BoundedDedupeStore.this.maxEntries;
-                }
-            };
-        }
-
-        synchronized boolean markIfFirst(String key) {
-            // DB/Redis dedupe가 붙기 전까지 프로세스 단위 중복 재발행을 제한한다.
-            if (keys.containsKey(key)) {
-                return false;
-            }
-            keys.put(key, true);
-            return true;
-        }
-
-        synchronized void remove(String key) {
-            keys.remove(key);
-        }
     }
 }

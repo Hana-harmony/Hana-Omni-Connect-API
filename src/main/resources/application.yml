@@ -39,3 +39,8 @@ omnilens:
   ai:
     hannah:
       base-url: http://hannah-montana-ai:8000
+  alert:
+    dedupe:
+      mode: redis
+      ttl: 24h
+      max-in-memory-entries: 10000
