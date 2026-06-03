@@ -33,6 +33,13 @@
 - 로컬 실제 키가 있어도 테스트가 외부망을 타지 않도록 컨트롤러 테스트에서 provider key를 비움
 - 서비스 단위 테스트로 provider 성공, provider 실패 fallback, 종목 마스터 검색을 검증
 
+## 2026-06-04 Hannah-Montana-AI 분석 클라이언트
+- 내부 FastAPI 서비스 `POST /api/v1/alerts/analyze` 호출용 `HannahAiAnalysisClient` 추가
+- AI 요청·응답 DTO는 Python API 계약에 맞춰 snake_case JSON 필드로 고정
+- 스프링 컨테이너 내부 통신 전제에 따라 서비스 토큰 헤더는 사용하지 않음
+- 운영 설정은 secret이 아닌 `HANNAH_AI_BASE_URL` 또는 기본 내부 서비스명으로 처리
+- 테스트에서 토큰 헤더 미전송, stock universe payload, 분석 응답 매핑을 검증
+
 ## 현재 구현 로직
 - 시장 데이터는 공공데이터 주식시세 snapshot을 우선 사용하고, 사용할 수 없으면 fallback 데이터로 표준 응답 구조를 유지한다.
 - 현지 통화 환산가는 `currentPriceKrw * fxRate`로 계산한다.
@@ -40,6 +47,7 @@
 - Naver News 응답의 HTML 태그와 entity를 정규화해 제목과 snippet으로 변환한다.
 - OpenDART 공시검색 응답의 접수번호로 원문 공시 URL을 생성한다.
 - 공공데이터 주식시세 응답은 첫 번째 종목 항목을 `PublicDataStockPriceSnapshot`으로 변환한다.
+- Hannah-Montana-AI 분석 응답은 알림 이벤트 생성 단계에서 사용할 표준 분석 결과 DTO로 수신한다.
 
 ## 외부 연동 예정
 - KIS, KRX 외국인 보유율, 한국수출입은행 환율은 현재 포트만 정의된 상태다.
