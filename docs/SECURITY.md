@@ -23,6 +23,11 @@
 - `OPEN_DART_API_KEY`: OpenDART 공시검색 API 인증키
 - 외부 API 키는 로그, 예외 메시지, 테스트 fixture, 커밋 파일에 남기지 않는다.
 
+## 내부 AI 통신
+- Hannah-Montana-AI는 스프링 컨테이너 내부 네트워크에서만 접근 가능하게 배치한다.
+- `HANNAH_AI_BASE_URL`은 주소 설정값이며 secret으로 분류하지 않는다.
+- 별도 서비스 토큰 헤더는 사용하지 않는다.
+
 ## 향후 강화
 - 협력사별 key rotation
 - mTLS 또는 요청 서명
