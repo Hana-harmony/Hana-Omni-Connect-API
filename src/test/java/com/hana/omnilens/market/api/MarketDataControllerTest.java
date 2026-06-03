@@ -13,7 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
         "omnilens.security.api-key-enabled=true",
-        "omnilens.security.api-key-sha256=4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4"
+        "omnilens.security.api-key-sha256=4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4",
+        "omnilens.providers.public-data.service-key="
 })
 @AutoConfigureMockMvc
 class MarketDataControllerTest {
@@ -31,7 +32,7 @@ class MarketDataControllerTest {
                 .andExpect(jsonPath("$.stockCode", equalTo("005930")))
                 .andExpect(jsonPath("$.baseCurrency", equalTo("KRW")))
                 .andExpect(jsonPath("$.localCurrency", equalTo("USD")))
-                .andExpect(jsonPath("$.source", equalTo("MOCK_KIS_KRX_EXIMBANK")));
+                .andExpect(jsonPath("$.source", equalTo("MOCK_MARKET_DATA")));
     }
 
     @Test
