@@ -40,6 +40,7 @@ docker compose -f compose.local.yml up -d
 - API key handshake 기반 WebSocket subscription 계약
 - 시장/알림 API 입력 validation 실패와 ProblemDetail 응답 계약
 - provider 수집 결과의 중복 URL 재발행 방지
+- AI `duplicateKey` 기반 수집 알림 재발행 방지
 - Redis TTL dedupe와 Redis 장애 시 in-memory fallback
 - 협력사 watchlist 주기 수집 스케줄러 disabled/성공/실패 격리
 

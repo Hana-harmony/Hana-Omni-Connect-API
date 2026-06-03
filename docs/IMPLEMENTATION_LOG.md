@@ -109,6 +109,12 @@
 - 직접 알림 발행 API는 협력사 내부 재처리·마이그레이션용으로 두 필드를 선택값으로 허용한다.
 - `analyze-and-publish`, `collect-and-publish`, WebSocket 계약 테스트에서 AI 중복 키와 모델 버전 전파를 검증한다.
 
+## 2026-06-04 AI duplicateKey 기반 수집 중복 방지
+- provider 원문 URL dedupe 이후 Hannah AI가 생성한 `duplicateKey`를 한 번 더 dedupe 기준으로 사용한다.
+- dedupe key는 `partnerId`, `sourceType`, AI `duplicateKey`를 조합해 협력사·뉴스/공시 경계를 분리한다.
+- 같은 기사 포장 차이로 URL은 다르지만 AI canonical key가 같은 뉴스는 WebSocket 발행 전에 건너뛴다.
+- 테스트로 동일 URL 중복과 AI duplicateKey 중복이 모두 `skippedDuplicateCount`에 반영되는지 검증한다.
+
 ## 2026-06-04 입력 validation 실패 계약
 - `ApiExceptionHandler`를 추가해 path, query, request body validation 실패를 `400 Bad Request` ProblemDetail로 통일했다.
 - validation error type은 `https://hana-omnilens-api/errors/validation`으로 고정했다.
