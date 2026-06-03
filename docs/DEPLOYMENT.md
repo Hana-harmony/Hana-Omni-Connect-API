@@ -35,10 +35,12 @@ docker compose -f compose.local.yml up -d
 - `NAVER_NEWS_CLIENT_ID`: Naver News Search API Client ID
 - `NAVER_NEWS_CLIENT_SECRET`: Naver News Search API Client Secret
 - `OPEN_DART_API_KEY`: OpenDART API 인증키
+- `KOREA_EXIM_AUTH_KEY`: 한국수출입은행 환율 API 인증키
 
 ## 선택 운영 변수
 - `HANNAH_AI_BASE_URL`: Hannah-Montana-AI 내부 서비스 주소. 기본값은 `http://hannah-montana-ai:8000`이다.
 - `KRX_BASE_URL`: KRX 데이터 endpoint 주소. 기본값은 `https://data.krx.co.kr`이다.
+- `KOREA_EXIM_BASE_URL`: 한국수출입은행 환율 endpoint 주소. 기본값은 `https://oapi.koreaexim.go.kr`이다.
 - `OMNILENS_RATE_LIMIT_ENABLED`: API key fingerprint 단위 rate limit 활성화 여부. 기본값은 `true`이다.
 - `OMNILENS_RATE_LIMIT_CAPACITY`: bucket 최대 요청 수. 기본값은 `120`이다.
 - `OMNILENS_RATE_LIMIT_REFILL_TOKENS`: refill마다 복구되는 요청 수. 기본값은 `120`이다.

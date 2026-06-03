@@ -162,11 +162,21 @@
 - 빈 종목코드 설정은 `KisRealtimeProperties`에서 제거해 env placeholder 기본값이 구독 요청으로 전파되지 않게 했다.
 - 단위 테스트로 disabled no-op, 종목별 구독 frame 생성, 수신 메시지 cache 반영, 빈 종목코드 제거를 검증했다.
 
+## 2026-06-04 한국수출입은행 환율 provider 연결
+- 한국수출입은행 현재환율 endpoint `GET /site/program/financial/exchangeJSON` 계약을 `KoreaEximExchangeRateClient`로 격리했다.
+- 한국수출입은행 신규 OpenAPI domain `https://oapi.koreaexim.go.kr`을 기본값으로 사용한다.
+- 요청 query는 `authkey`, `searchdate=yyyyMMdd`, `data=AP01`로 고정했다.
+- 응답의 `cur_unit`, `deal_bas_r`를 읽고 내부 계산용 `KRW -> 현지통화` 환율로 변환한다.
+- `deal_bas_r`는 외화 1단위 또는 `JPY(100)` 같은 묶음 단위당 원화 기준율이므로 `통화단위 / deal_bas_r`로 환산한다.
+- `ExchangeRateProviderRefreshService`가 provider snapshot을 `ExchangeRateCache`에 저장해 기존 quote 환산 fallback 흐름과 같은 캐시를 사용하게 했다.
+- `KOREA_EXIM_AUTH_KEY`는 env placeholder로만 관리하고, 테스트 fixture에는 가짜 값만 사용한다.
+- 단위 테스트로 요청 query, USD 환산, `JPY(100)` 단위 처리, provider 미응답 시 cache 미변경을 검증했다.
+
 ## 현재 구현 로직
 - 시장 데이터는 KIS 실시간 체결 cache, KIS 현재가 REST, 공공데이터 주식시세 snapshot, fallback 데이터 순서로 표준 응답 구조를 유지한다.
 - 호가 응답은 KIS 실시간 호가 cache를 우선 사용하고, 없으면 mock 호가 snapshot으로 응답 구조를 유지한다.
 - 외국인 보유수량, 외국인 지분율, 한도소진율은 KRX 외국인보유량 snapshot을 우선 사용하고 장애 시 캐시 또는 fallback 데이터로 응답 구조를 유지한다.
-- 현지 통화 환산가는 quote 요청의 `fxRate`, 협력사 입력 환율 캐시, `1` fallback 순서로 선택한 환율에 `currentPriceKrw`를 곱해 계산한다.
+- 현지 통화 환산가는 quote 요청의 `fxRate`, 한국수출입은행 또는 협력사 입력 환율 캐시, `1` fallback 순서로 선택한 환율에 `currentPriceKrw`를 곱해 계산한다.
 - validation 실패 응답은 `400 Bad Request`와 ProblemDetail body로 통일한다.
 - 알림 이벤트는 `/api/v1/alerts/events`로 수신한 뒤 `/topic/partners/{partnerId}/alerts`, `/topic/stocks/{stockCode}/alerts`로 전송한다.
 - WebSocket endpoint `/ws/alerts` handshake도 운영 API key 검증 대상이다.
@@ -183,6 +193,5 @@
 - 인증된 운영 API는 API key fingerprint별 rate limit을 적용한다.
 
 ## 외부 연동 예정
-- 한국수출입은행 환율은 현재 포트·계약 하네스만 정의된 상태다.
-- KRX 외국인보유량 provider와 협력사 입력 환율은 운영 전 Redis/DB 캐시로 승격한다.
+- KRX 외국인보유량 provider와 환율 cache는 운영 전 Redis/DB 캐시로 승격한다.
 - 협력사 watchlist를 DB에서 관리하는 저장소를 추가한다.

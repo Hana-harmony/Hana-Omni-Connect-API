@@ -27,6 +27,8 @@ docker compose -f compose.local.yml up -d
 - 시장 데이터 quote의 KRX 외국인 보유수량·지분율·한도소진율 반영
 - KRX 외국인보유량 날짜 재시도와 장애 시 전일 캐시 fallback
 - 협력사 입력 환율 저장과 quote의 환율 캐시 fallback
+- 한국수출입은행 환율 provider 요청·응답 매핑과 cache refresh
+- `deal_bas_r`의 `KRW -> 현지통화` 변환 및 `JPY(100)` 단위 처리
 - quote 요청 `fxRate`가 저장된 환율보다 우선되는 계산 계약
 - Naver News Search 응답 정규화
 - OpenDART 공시검색 응답 매핑
