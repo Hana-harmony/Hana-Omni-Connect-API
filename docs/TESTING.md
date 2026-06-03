@@ -19,6 +19,7 @@ docker compose -f compose.local.yml up -d
 - KIS WebSocket 체결·호가 구독 frame JSON 계약
 - KIS WebSocket `H0STCNT0`, `H0STASP0` 실시간 payload 파싱
 - KIS WebSocket raw message ingestion과 실시간 cache 저장
+- KIS WebSocket session runner의 disabled no-op, 구독 frame 생성, 수신 메시지 cache 반영
 - 시장 데이터 quote/orderbook의 KIS 실시간 cache 우선 사용
 - 시장 데이터 quote의 KIS 현재가 우선 사용과 공공데이터 fallback
 - 공공데이터 주식시세 provider 성공·fallback

@@ -25,7 +25,7 @@
 - Hannah-Montana-AI: 뉴스·공시 종목 매핑, 이벤트, 감성, 중요도 분석
 
 ## 현재 구현 상태
-- KIS 현재가 REST, KIS 실시간 체결·호가 WebSocket 계약 하네스, 공공데이터 주식시세, KRX 외국인보유량, Naver News Search, OpenDART, Hannah-Montana-AI 어댑터가 구현되어 있다.
+- KIS 현재가 REST, KIS 실시간 체결·호가 WebSocket runner, 공공데이터 주식시세, KRX 외국인보유량, Naver News Search, OpenDART, Hannah-Montana-AI 어댑터가 구현되어 있다.
 - `MarketDataService`가 표준 응답 구조와 현지 통화 환산 로직을 제공한다.
 - `MarketDataService`는 KIS 실시간 체결 cache, KIS 현재가 REST, 공공데이터 전일 snapshot, mock fallback 순서로 quote 응답 구조를 유지한다.
 - `MarketDataService`는 KIS 실시간 호가 cache가 있으면 orderbook 응답에 우선 반영한다.
