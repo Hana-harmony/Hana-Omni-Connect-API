@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
         ExternalProviderProperties.class,
         HannahAiProperties.class,
         AlertDedupeProperties.class,
-        AlertCollectionSchedulerProperties.class
+        AlertCollectionSchedulerProperties.class,
+        KisRealtimeProperties.class
 })
 public class ExternalProviderConfiguration {
 }

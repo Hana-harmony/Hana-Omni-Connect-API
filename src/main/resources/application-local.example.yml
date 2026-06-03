@@ -37,6 +37,12 @@ omnilens:
   ai:
     hannah:
       base-url: http://localhost:8000
+  market:
+    kis-realtime:
+      enabled: false
+      stock-codes:
+        - "005930"
+        - "000660"
   alert:
     dedupe:
       mode: redis
