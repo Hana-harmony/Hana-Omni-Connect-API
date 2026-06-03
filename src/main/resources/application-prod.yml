@@ -22,6 +22,11 @@ omnilens:
   ai:
     hannah:
       base-url: ${HANNAH_AI_BASE_URL:http://hannah-montana-ai:8000}
+  alert:
+    dedupe:
+      mode: ${ALERT_DEDUPE_MODE:redis}
+      ttl: ${ALERT_DEDUPE_TTL:24h}
+      max-in-memory-entries: ${ALERT_DEDUPE_MAX_IN_MEMORY_ENTRIES:10000}
 
 spring:
   datasource:

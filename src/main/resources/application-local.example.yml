@@ -24,6 +24,11 @@ omnilens:
   ai:
     hannah:
       base-url: http://localhost:8000
+  alert:
+    dedupe:
+      mode: redis
+      ttl: 24h
+      max-in-memory-entries: 10000
 
 spring:
   datasource:
