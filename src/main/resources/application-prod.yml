@@ -35,6 +35,10 @@ omnilens:
   ai:
     hannah:
       base-url: ${HANNAH_AI_BASE_URL:http://hannah-montana-ai:8000}
+  market:
+    kis-realtime:
+      enabled: ${KIS_REALTIME_ENABLED:false}
+      stock-codes: ${KIS_REALTIME_STOCK_CODES:}
   alert:
     dedupe:
       mode: ${ALERT_DEDUPE_MODE:redis}

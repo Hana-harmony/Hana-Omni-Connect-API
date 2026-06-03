@@ -42,6 +42,16 @@ OMNILENS_ALERT_SCHEDULER_WATCHLISTS_0_STOCK_CODES_0=005930
 OMNILENS_ALERT_SCHEDULER_WATCHLISTS_0_STOCK_CODES_1=000660
 ```
 
+## KIS 실시간 시세 수신
+- 기본값은 `KIS_REALTIME_ENABLED=false`이다.
+- 활성화하면 `KIS_REALTIME_STOCK_CODES`의 종목마다 KIS 실시간 체결과 호가를 구독한다.
+- 수신 메시지는 실시간 cache에 저장되고 quote/orderbook 응답에서 우선 사용된다.
+
+```text
+KIS_REALTIME_ENABLED=true
+KIS_REALTIME_STOCK_CODES=005930,000660
+```
+
 ## 헬스체크
 - `GET /actuator/health`
 - `GET /actuator/info`

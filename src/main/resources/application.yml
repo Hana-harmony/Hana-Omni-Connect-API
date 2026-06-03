@@ -52,6 +52,10 @@ omnilens:
   ai:
     hannah:
       base-url: http://hannah-montana-ai:8000
+  market:
+    kis-realtime:
+      enabled: false
+      stock-codes: []
   alert:
     dedupe:
       mode: redis

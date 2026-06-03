@@ -154,6 +154,14 @@
 - ping, 시스템 응답, 미지원 TR은 cache를 변경하지 않고 `IGNORED` 결과로 반환한다.
 - 단위 테스트로 체결 저장, 호가 저장, 미지원 메시지 무시를 검증했다.
 
+## 2026-06-04 KIS 실시간 WebSocket session runner
+- `KisRealtimeSessionRunner`를 추가해 애플리케이션 준비 후 KIS 실시간 구독을 시작할 수 있게 했다.
+- 기본값은 `omnilens.market.kis-realtime.enabled=false`이며, 비활성화 상태에서는 외부 WebSocket에 연결하지 않는다.
+- 활성화 시 `omnilens.market.kis-realtime.stock-codes`의 각 종목에 대해 체결 `H0STCNT0`와 호가 `H0STASP0` 구독 frame을 생성한다.
+- `StandardKisRealtimeWebSocketConnection`은 연결 수립 후 구독 frame을 전송하고, 수신한 text message를 ingestion service로 전달한다.
+- 빈 종목코드 설정은 `KisRealtimeProperties`에서 제거해 env placeholder 기본값이 구독 요청으로 전파되지 않게 했다.
+- 단위 테스트로 disabled no-op, 종목별 구독 frame 생성, 수신 메시지 cache 반영, 빈 종목코드 제거를 검증했다.
+
 ## 현재 구현 로직
 - 시장 데이터는 KIS 실시간 체결 cache, KIS 현재가 REST, 공공데이터 주식시세 snapshot, fallback 데이터 순서로 표준 응답 구조를 유지한다.
 - 호가 응답은 KIS 실시간 호가 cache를 우선 사용하고, 없으면 mock 호가 snapshot으로 응답 구조를 유지한다.
@@ -175,6 +183,6 @@
 - 인증된 운영 API는 API key fingerprint별 rate limit을 적용한다.
 
 ## 외부 연동 예정
-- KIS 실시간 체결가·호가 WebSocket session runner와 한국수출입은행 환율은 현재 포트·계약 하네스만 정의된 상태다.
+- 한국수출입은행 환율은 현재 포트·계약 하네스만 정의된 상태다.
 - KRX 외국인보유량 provider와 협력사 입력 환율은 운영 전 Redis/DB 캐시로 승격한다.
 - 협력사 watchlist를 DB에서 관리하는 저장소를 추가한다.
