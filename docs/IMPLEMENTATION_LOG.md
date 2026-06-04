@@ -163,6 +163,14 @@
 - 감사 로그에는 API key 원문을 남기지 않고 SHA-256 hash prefix만 남긴다.
 - 테스트로 correlation id echo/generation과 감사 로그 fingerprint masking을 검증했다.
 
+## 2026-06-04 Redis 기반 request signature nonce store
+- `ApiSignatureNonceStore` 구현을 설정 기반으로 선택하도록 분리했다.
+- 운영 기본값은 Redis nonce store이며 key prefix는 `omnilens:security:signature:nonce:`이다.
+- Redis nonce store는 `SETNX`와 TTL을 사용해 같은 API key fingerprint와 nonce 조합의 재사용을 차단한다.
+- Redis nonce store가 없거나 장애가 발생하면 replay 방어를 보장할 수 없으므로 서명 검증 요청을 `503`으로 실패 닫힘 처리한다.
+- 로컬·테스트용 `in-memory` mode는 명시적으로 선택한 경우에만 사용한다.
+- 단위 테스트로 Redis `SETNX` TTL, duplicate nonce, expired nonce window, 설정별 store 선택을 검증했다.
+
 ## 2026-06-04 협력사 입력 환율 캐시
 - `ExchangeRateCache` 포트를 추가해 환율 저장소를 시장 데이터 계산 로직에서 분리했다.
 - 현재 구현은 `InMemoryExchangeRateCache`이며 `KRW -> 현지통화` 표시용 환율과 갱신 시각을 프로세스 캐시에 보관한다.
@@ -254,6 +262,7 @@
 - API 계약은 `/openapi.yaml`에서 OpenAPI 3.1 문서로 제공한다.
 - 인증된 운영 API는 API key fingerprint별 rate limit을 적용한다.
 - 운영 요청 서명은 HMAC-SHA256, timestamp clock skew, nonce replay 방어를 적용할 수 있다.
+- 운영 요청 서명 nonce는 Redis에 공유 저장해 다중 인스턴스에서도 replay를 방지한다.
 - 모든 요청은 correlation id로 추적 가능하고, 보안 인증 이벤트는 API key 원문 없이 감사 로그로 기록한다.
 
 ## 외부 연동 예정

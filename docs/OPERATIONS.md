@@ -110,6 +110,12 @@ EXCHANGE_RATE_REFRESH_CURRENCIES=USD,JPY
 - 보안 감사 로그는 `com.hana.omnilens.audit.security` logger로 남긴다.
 - 감사 로그는 인증 결과, method, path, API key hash prefix, 실패 사유만 기록하고 API key 원문은 기록하지 않는다.
 
+## Request Signature Nonce Store
+- HMAC 요청 서명 검증을 운영에서 켜면 nonce 저장소 기본값은 Redis다.
+- Redis nonce key는 TTL을 가지며 같은 API key fingerprint와 nonce 조합은 한 번만 허용된다.
+- Redis nonce store가 없거나 장애가 있으면 replay 방어를 보장할 수 없으므로 보호 API 요청은 `503`으로 실패 닫힘 처리된다.
+- 로컬 테스트에서 Redis 없이 서명 검증을 실험해야 할 때만 `OMNILENS_SIGNATURE_NONCE_STORE_MODE=in-memory`를 사용한다.
+
 ## 운영 전 보강
 - 외부 API timeout, retry, circuit breaker
 - 배포 환경별 Secret Manager 연동

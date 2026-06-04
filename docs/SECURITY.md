@@ -10,6 +10,7 @@
 - 요청 서명 canonical string은 `METHOD`, `URI_WITH_QUERY`, `TIMESTAMP`, `NONCE`, `SHA256_BODY_HEX`를 줄바꿈으로 연결한 값이다.
 - 서명 헤더는 `X-HANA-OMNILENS-TIMESTAMP`, `X-HANA-OMNILENS-NONCE`, `X-HANA-OMNILENS-SIGNATURE`를 사용한다.
 - timestamp는 허용 clock skew 안에 있어야 하고, nonce는 같은 API key fingerprint에서 한 번만 사용할 수 있다.
+- 운영 기본 nonce 저장소는 Redis이며, Redis nonce store가 없거나 장애가 발생하면 서명 검증 요청은 실패 닫힘 방식으로 `503`을 반환한다.
 - 모든 응답에는 `X-HANA-OMNILENS-CORRELATION-ID`를 포함하고, 같은 값은 로그 MDC `correlationId`에 저장한다.
 - 보안 감사 로그는 인증 결과, method, path, API key hash prefix, 실패 사유만 기록한다.
 - CORS는 profile별 설정 파일의 허용 목록만 사용한다.
@@ -52,7 +53,6 @@
 ## 향후 강화
 - 협력사별 key rotation
 - mTLS
-- Redis 기반 signature nonce 공유 저장소
 - WebSocket topic authorization 세분화
 - abuse detection
 - 감사 로그 무결성 보장

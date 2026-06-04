@@ -67,6 +67,7 @@ jobs:
             "OMNILENS_SIGNATURE_ENABLED=${{ secrets.OMNILENS_SIGNATURE_ENABLED || 'false' }}" \
             "OMNILENS_SIGNATURE_SECRET=${{ secrets.OMNILENS_SIGNATURE_SECRET }}" \
             "OMNILENS_SIGNATURE_ALLOWED_CLOCK_SKEW=${{ secrets.OMNILENS_SIGNATURE_ALLOWED_CLOCK_SKEW || '5m' }}" \
+            "OMNILENS_SIGNATURE_NONCE_STORE_MODE=${{ secrets.OMNILENS_SIGNATURE_NONCE_STORE_MODE || 'redis' }}" \
             "OMNILENS_SIGNATURE_MAX_NONCES=${{ secrets.OMNILENS_SIGNATURE_MAX_NONCES || '10000' }}" \
             "DB_URL=${{ secrets.DB_URL }}" \
             "DB_USERNAME=${{ secrets.DB_USERNAME }}" \
