@@ -18,11 +18,15 @@ import com.hana.omnilens.alert.application.AlertProviderCollectionService;
 import com.hana.omnilens.alert.application.AlertStreamingService;
 import com.hana.omnilens.alert.application.PartnerWatchlistService;
 import com.hana.omnilens.alert.domain.AlertEvent;
+import com.hana.omnilens.common.api.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.hana.omnilens.security.PartnerAuthorizationService;
 
 @Validated
 @RestController
 @RequestMapping("/api/v1/alerts")
+@Tag(name = "Alerts", description = "News and disclosure intelligence event APIs")
 public class AlertController {
 
     private final AlertStreamingService alertStreamingService;
@@ -60,9 +64,10 @@ public class AlertController {
     }
 
     @PostMapping("/events")
-    public AlertEvent publish(@Valid @RequestBody AlertPublishRequest request) {
+    @Operation(summary = "Publish analyzed news or disclosure event to partner streams")
+    public ApiResponse<AlertEvent> publish(@Valid @RequestBody AlertPublishRequest request) {
         partnerAuthorizationService.assertPartnerAccess(request.partnerId());
-        return alertStreamingService.publish(request);
+        return ApiResponse.success(alertStreamingService.publish(request));
     }
 
     @PostMapping("/analyze-and-publish")

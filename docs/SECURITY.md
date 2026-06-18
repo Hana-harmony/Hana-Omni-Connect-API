@@ -24,6 +24,8 @@
 - DB credential로 인증된 WebSocket 세션은 `/topic/partners/{partnerId}/alerts`와 `/topic/partners/{partnerId}/stocks/{stockCode}/alerts`에서 자기 `partnerId`만 구독할 수 있다.
 - DB credential 세션은 전역 `/topic/stocks/{stockCode}/alerts` 구독을 사용할 수 없다.
 - 세션은 stateless로 유지한다.
+- Papago/DeepL/KIS/KRX/Naver/OpenDART 등 외부 API credential은 환경 변수 또는 Secret Manager에서만 주입한다.
+- 세무/OCR/환급 상태 데이터는 개인정보와 민감 금융정보로 분류하고 최소 저장, 마스킹, 감사 로그를 기본으로 한다.
 
 ## 협력사 API key 운영
 - 원문 API key는 발급 직후 협력사에게 한 번만 전달한다.
@@ -35,6 +37,8 @@
 - `application-local.yml`은 커밋하지 않는다.
 - `application-prod.yml`은 커밋하되 `${...}` 환경변수 placeholder만 사용한다.
 - 로컬 시크릿은 `application-local.yml`에만 둔다.
+- 외부 데이터 수집 credential인 `NAVER_NEWS_CLIENT_ID`, `NAVER_NEWS_CLIENT_SECRET`, `OPEN_DART_API_KEY`, `KRX_SERVICE_KEY`는 Hana-OmniLens-API에서만 사용한다.
+- Hannah-Montana-AI와 Stock-exchange-* 레포에는 Naver/OpenDART/KRX credential을 두지 않는다.
 - 운영 시크릿은 GitHub Secrets로 주입하고 원격 서버의 `application-prod.env`에만 생성한다.
 - `application-prod.env`는 커밋하지 않는다.
 - GHCR pull token은 원격 서버의 `deploy-prod.env`에만 생성하고 앱 컨테이너에는 주입하지 않는다.
@@ -72,3 +76,5 @@
 - 협력사별 key rotation 자동화
 - abuse detection
 - 감사 로그 무결성 보장
+- 세무 서류/환급 상태 접근 권한 분리
+- 외부 번역 공급자 전송 데이터 최소화와 개인정보 제거

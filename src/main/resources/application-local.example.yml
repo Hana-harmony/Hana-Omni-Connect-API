@@ -102,6 +102,13 @@ omnilens:
             - "005930"
             - "000660"
 
+providers:
+  kis:
+    base-url: https://openapi.koreainvestment.com:9443
+    account-number: ""
+    app-key: ""
+    app-secret: ""
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/omnilens

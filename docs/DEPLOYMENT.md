@@ -109,6 +109,21 @@ HEALTHCHECK_SCHEME=https
 
 `SERVER_SSL_CLIENT_AUTH=want`는 healthcheck가 client certificate 없이 통과할 수 있게 두고, 보호 API는 앱 필터가 client certificate 존재와 유효 기간을 다시 검증한다.
 
+## 향후 외부 연동 Secrets
+최신 기능정의 구현 시 아래 값은 GitHub Secrets 또는 배포 환경 Secret Manager에만 둔다.
+
+- `KIS_ACCOUNT_NUMBER`: KIS 계좌번호
+- `KIS_APP_KEY`, `KIS_APP_SECRET`: KIS Open API credential
+- `KRX_SERVICE_KEY`: KRX 데이터 연동 service key
+- `EXIMBANK_API_KEY`: 한국수출입은행 환율 API credential
+- `NAVER_NEWS_CLIENT_ID`, `NAVER_NEWS_CLIENT_SECRET`: Naver News Search API credential
+- `OPEN_DART_API_KEY`: OpenDART API credential
+- `PAPAGO_CLIENT_ID`, `PAPAGO_CLIENT_SECRET`: Papago 번역 credential
+- `DEEPL_API_KEY`: DeepL 번역 credential
+- `TAX_OCR_PROVIDER_KEY`: 세무 OCR/문서 검증 공급자를 사용할 경우 credential
+
+세무 파일 원본, OCR 결과, 환급금 선지급 상태는 별도 암호화 저장소와 접근 감사 로그를 전제로 배포한다.
+
 ## 원격 서버 준비
 원격 서버에는 아래 런타임이 미리 설치되어 있어야 한다.
 

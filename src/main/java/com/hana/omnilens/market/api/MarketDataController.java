@@ -17,14 +17,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hana.omnilens.common.api.ApiResponse;
 import com.hana.omnilens.market.application.MarketDataService;
 import com.hana.omnilens.market.domain.MarketQuote;
 import com.hana.omnilens.market.domain.OrderBook;
 import com.hana.omnilens.market.domain.StockSummary;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Validated
 @RestController
 @RequestMapping("/api/v1/market")
+@Tag(name = "Market", description = "Korean stock quote, order book, and stock search APIs")
 public class MarketDataController {
 
     private final MarketDataService marketDataService;
@@ -39,21 +44,24 @@ public class MarketDataController {
     }
 
     @GetMapping("/stocks/{stockCode}/quote")
-    public MarketQuote getQuote(
+    @Operation(summary = "Get Korean stock quote with KRW and requested local currency price")
+    public ApiResponse<MarketQuote> getQuote(
             @PathVariable @Pattern(regexp = "\\d{6}") String stockCode,
             @RequestParam(defaultValue = "USD") @Pattern(regexp = "[A-Z]{3}") String currency,
             @RequestParam(required = false) @DecimalMin("0.000001") BigDecimal fxRate) {
-        return marketDataService.getQuote(stockCode, currency, fxRate);
+        return ApiResponse.success(marketDataService.getQuote(stockCode, currency, fxRate));
     }
 
     @GetMapping("/stocks/{stockCode}/orderbook")
-    public OrderBook getOrderBook(@PathVariable @Pattern(regexp = "\\d{6}") String stockCode) {
-        return marketDataService.getOrderBook(stockCode);
+    @Operation(summary = "Get Korean stock order book")
+    public ApiResponse<OrderBook> getOrderBook(@PathVariable @Pattern(regexp = "\\d{6}") String stockCode) {
+        return ApiResponse.success(marketDataService.getOrderBook(stockCode));
     }
 
     @GetMapping("/stocks/search")
-    public List<StockSummary> searchStocks(@RequestParam @Size(min = 1, max = 40) String query) {
-        return marketDataService.searchStocks(query);
+    @Operation(summary = "Search Korean stocks")
+    public ApiResponse<List<StockSummary>> searchStocks(@RequestParam @Size(min = 1, max = 40) String query) {
+        return ApiResponse.success(marketDataService.searchStocks(query));
     }
 
     @PutMapping("/exchange-rates/{currency}")
