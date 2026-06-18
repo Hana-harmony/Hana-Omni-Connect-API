@@ -22,8 +22,10 @@
 ## 현재 구현 로직
 - 시장 데이터는 `MarketDataService`의 목 데이터로 표준 응답 구조를 검증한다.
 - 현지 통화 환산가는 `currentPriceKrw * fxRate`로 계산한다.
+- quote 응답은 현재 목 데이터 기준으로 외국인 보유 수량, 보유율, 한도소진율을 포함한다.
 - 알림 이벤트는 `/api/v1/alerts/events`로 수신한 뒤 `/topic/partners/{partnerId}/alerts`, `/topic/stocks/{stockCode}/alerts`로 전송한다.
 
 ## 외부 연동 예정
-- KIS, KRX, 한국수출입은행, Naver News, OpenDART는 현재 포트만 정의된 상태다.
-- Hannah-Montana-AI가 뉴스·공시 분석 결과를 제공하면 알림 송신 payload에 연결한다.
+- KIS, KRX, 한국수출입은행, Naver News, OpenDART, Papago, DeepL은 현재 포트만 정의된 상태다.
+- Hannah-Montana-AI가 뉴스·공시 분석 결과를 제공하면 번역 결과와 함께 알림 송신 payload에 연결한다.
+- 당일 외국인 지분율 예측 boundary, VI 발동, 상·하한가 상태, 세무 환급 상태 API는 최신 기능정의 기준으로 문서화되었고 구현은 후속 단계다.

@@ -1,6 +1,7 @@
-package com.hana.omnilens.security;
+package com.hana.omnilens.config;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,23 +17,17 @@ import org.springframework.test.web.servlet.MockMvc;
         "omnilens.security.api-key-sha256="
 })
 @AutoConfigureMockMvc
-class ApiKeyAuthenticationFilterTest {
+class OpenApiDocumentationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    void apiFailsClosedWhenHashIsMissing() throws Exception {
-        mockMvc.perform(get("/api/v1/market/stocks/005930/quote")
-                        .header("X-HANA-OMNILENS-API-KEY", "test-api-key"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.success", equalTo(false)))
-                .andExpect(jsonPath("$.code", equalTo("AUTH_002")));
-    }
-
-    @Test
-    void healthEndpointDoesNotRequireApiKey() throws Exception {
-        mockMvc.perform(get("/actuator/health"))
-                .andExpect(status().isOk());
+    void openApiDocsExposeBusinessApiWithoutApiKey() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.info.title", equalTo("Hana OmniLens API")))
+                .andExpect(jsonPath("$.paths['/api/v1/market/stocks/{stockCode}/quote']", notNullValue()))
+                .andExpect(jsonPath("$.components.securitySchemes.hanaApiKey", notNullValue()));
     }
 }

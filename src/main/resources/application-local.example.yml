@@ -9,6 +9,13 @@ omnilens:
       - http://localhost:3000
       - http://localhost:5173
 
+providers:
+  kis:
+    base-url: https://openapi.koreainvestment.com:9443
+    account-number: ""
+    app-key: ""
+    app-secret: ""
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/omnilens

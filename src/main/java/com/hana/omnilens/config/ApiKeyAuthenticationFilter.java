@@ -6,15 +6,21 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.hana.omnilens.common.api.ApiResponse;
+import com.hana.omnilens.common.exception.ErrorCode;
 
 @Component
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
@@ -22,9 +28,11 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     private static final String HEADER_NAME = "X-HANA-OMNILENS-API-KEY";
 
     private final OmniLensSecurityProperties properties;
+    private final ObjectMapper objectMapper;
 
-    public ApiKeyAuthenticationFilter(OmniLensSecurityProperties properties) {
+    public ApiKeyAuthenticationFilter(OmniLensSecurityProperties properties, ObjectMapper objectMapper) {
         this.properties = properties;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -36,13 +44,13 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (!StringUtils.hasText(properties.apiKeySha256())) {
-            response.sendError(HttpStatus.SERVICE_UNAVAILABLE.value(), "API key hash is not configured");
+            writeError(response, ErrorCode.API_KEY_NOT_CONFIGURED);
             return;
         }
 
         String providedKey = request.getHeader(HEADER_NAME);
         if (!StringUtils.hasText(providedKey) || !matchesConfiguredHash(providedKey)) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid API key");
+            writeError(response, ErrorCode.INVALID_API_KEY);
             return;
         }
 
@@ -51,7 +59,19 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/actuator/health") || path.equals("/actuator/info");
+        return path.startsWith("/actuator/health")
+                || path.equals("/actuator/info")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs");
+    }
+
+    private void writeError(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        HttpStatus status = errorCode.status();
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(
+                response.getWriter(),
+                ApiResponse.error(status.value(), errorCode.code(), errorCode.message()));
     }
 
     private boolean matchesConfiguredHash(String providedKey) {

@@ -36,3 +36,7 @@ docker compose -f compose.local.yml down
 - 장애 추적 correlation id
 - 외부 API timeout, retry, circuit breaker
 - 배포 환경별 Secret Manager 연동
+- KIS/KRX/EXIM/Naver/OpenDART/Papago/DeepL credential rotation
+- 시장 데이터 장중 캐시와 장 시작 전 종목 마스터 배치 모니터링
+- VI/제한가격 상태와 외국인 지분율 예측 엔진 drift 모니터링
+- 세무/OCR/환급 상태 데이터의 감사 로그와 보존 정책

@@ -6,11 +6,15 @@
 - API key 해시가 없으면 운영 API는 실패 닫힘 방식으로 `503`을 반환한다.
 - CORS는 profile별 설정 파일의 허용 목록만 사용한다.
 - 세션은 stateless로 유지한다.
+- Papago/DeepL/KIS/KRX/Naver/OpenDART 등 외부 API credential은 환경 변수 또는 Secret Manager에서만 주입한다.
+- 세무/OCR/환급 상태 데이터는 개인정보와 민감 금융정보로 분류하고 최소 저장, 마스킹, 감사 로그를 기본으로 한다.
 
 ## 시크릿 관리
 - `application-local.yml`은 커밋하지 않는다.
 - `application-prod.yml`은 커밋하되 `${...}` 환경변수 placeholder만 사용한다.
 - 로컬 시크릿은 `application-local.yml`에만 둔다.
+- 외부 데이터 수집 credential인 `NAVER_NEWS_CLIENT_ID`, `NAVER_NEWS_CLIENT_SECRET`, `OPEN_DART_API_KEY`, `KRX_SERVICE_KEY`는 Hana-OmniLens-API에서만 사용한다.
+- Hannah-Montana-AI와 Stock-exchange-* 레포에는 Naver/OpenDART/KRX credential을 두지 않는다.
 - 운영 시크릿은 GitHub Secrets로 주입하고 원격 서버의 `application-prod.env`에만 생성한다.
 - `application-prod.env`는 커밋하지 않는다.
 - GHCR pull token은 원격 서버의 `deploy-prod.env`에만 생성하고 앱 컨테이너에는 주입하지 않는다.
@@ -22,3 +26,5 @@
 - WebSocket handshake 인증 강화
 - rate limit과 abuse detection
 - 감사 로그 무결성 보장
+- 세무 서류/환급 상태 접근 권한 분리
+- 외부 번역 공급자 전송 데이터 최소화와 개인정보 제거

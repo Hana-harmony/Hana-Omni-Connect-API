@@ -28,15 +28,20 @@ class MarketDataControllerTest {
                         .param("currency", "USD")
                         .param("fxRate", "0.00072"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.stockCode", equalTo("005930")))
-                .andExpect(jsonPath("$.baseCurrency", equalTo("KRW")))
-                .andExpect(jsonPath("$.localCurrency", equalTo("USD")))
-                .andExpect(jsonPath("$.source", equalTo("MOCK_KIS_KRX_EXIMBANK")));
+                .andExpect(jsonPath("$.success", equalTo(true)))
+                .andExpect(jsonPath("$.status", equalTo(200)))
+                .andExpect(jsonPath("$.code", equalTo("COMMON_000")))
+                .andExpect(jsonPath("$.data.stockCode", equalTo("005930")))
+                .andExpect(jsonPath("$.data.baseCurrency", equalTo("KRW")))
+                .andExpect(jsonPath("$.data.localCurrency", equalTo("USD")))
+                .andExpect(jsonPath("$.data.source", equalTo("MOCK_KIS_KRX_EXIMBANK")));
     }
 
     @Test
     void quoteApiRequiresApiKey() throws Exception {
         mockMvc.perform(get("/api/v1/market/stocks/005930/quote"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success", equalTo(false)))
+                .andExpect(jsonPath("$.code", equalTo("AUTH_001")));
     }
 }
