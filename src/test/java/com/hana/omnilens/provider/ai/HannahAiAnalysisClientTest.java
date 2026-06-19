@@ -36,28 +36,35 @@ class HannahAiAnalysisClientTest {
                 .andExpect(content().string(containsString("\"stock_code\":\"005930\"")))
                 .andRespond(withSuccess("""
                         {
-                          "stock_code": "005930",
-                          "stock_name": "삼성전자",
-                          "source_type": "NEWS",
-                          "original_title": "삼성전자 실적 개선",
-                          "summary": "반도체 회복으로 실적 개선 기대",
-                          "event_tags": ["EARNINGS"],
-                          "sentiment": "POSITIVE",
-                          "importance": "HIGH",
-                          "related_stocks": ["005930"],
-                          "holder_target": true,
-                          "watchlist_target": true,
-                          "glossary_terms": [
-                            {
-                              "source_term": "실적",
-                              "normalized_term": "실적",
-                              "english_term": "earnings",
-                              "category": "event"
-                            }
-                          ],
-                          "translation_quality_flags": ["FINANCIAL_GLOSSARY_APPLIED"],
-                          "duplicate_key": "duplicate-key",
-                          "model_version": "financial-keyword-baseline-2026-06-04"
+                          "success": true,
+                          "status": 200,
+                          "code": "COMMON_000",
+                          "message": "OK",
+                          "data": {
+                            "stock_code": "005930",
+                            "stock_name": "삼성전자",
+                            "source_type": "NEWS",
+                            "original_title": "삼성전자 실적 개선",
+                            "summary": "반도체 회복으로 실적 개선 기대",
+                            "event_tags": ["EARNINGS"],
+                            "sentiment": "POSITIVE",
+                            "importance": "HIGH",
+                            "related_stocks": ["005930"],
+                            "holder_target": true,
+                            "watchlist_target": true,
+                            "glossary_terms": [
+                              {
+                                "source_term": "실적",
+                                "normalized_term": "실적",
+                                "english_term": "earnings",
+                                "category": "event"
+                              }
+                            ],
+                            "translation_quality_flags": ["FINANCIAL_GLOSSARY_APPLIED"],
+                            "duplicate_key": "duplicate-key",
+                            "model_version": "financial-keyword-baseline-2026-06-04"
+                          },
+                          "timestamp": "2026-06-20T00:00:00Z"
                         }
                         """, APPLICATION_JSON));
 
