@@ -195,8 +195,13 @@
 - DeepL `POST /v2/translate` 계약을 `DeepLTranslationClient`로 격리했다.
 - 요청 header는 `Authorization: DeepL-Auth-Key {apiKey}`로 고정하고, 요청 body는 `source_lang=KO`, `target_lang=EN-US`, `text={원문 제목}` form payload로 전송한다.
 - 운영 설정은 `DEEPL_TRANSLATION_BASE_URL`, `DEEPL_API_KEY` 환경변수 슬롯만 추가하고, 실제 값은 커밋하지 않는다.
-- `AlertTitleTranslationService`는 DeepL을 먼저 시도하고, DeepL 키 미설정·장애·빈 결과 시 Papago를 시도한 뒤, Papago도 실패하면 원문 제목으로 fallback한다.
-- 단위 테스트로 DeepL 요청 계약, DeepL 우선 번역, Papago fallback, 전체 provider 실패 시 원문 fallback을 검증했다.
+- `AlertTitleTranslationService`는 DeepL을 시도하고, DeepL 키 미설정·장애·빈 결과 시 원문 제목으로 fallback한다.
+- 단위 테스트로 DeepL 요청 계약, DeepL 우선 번역, provider 실패 시 원문 fallback을 검증했다.
+
+## 2026-06-20 DeepL live smoke report
+- `build_deepl_translation_smoke_report.py`를 추가해 실제 DeepL translation API 호출 결과를 `reports/deepl-translation-smoke-report.json`에 기록한다.
+- 로컬 `application-local.yml`의 DeepL key를 환경변수로만 주입해 live smoke를 실행했고, HTTP 200과 영어 번역문을 확인했다.
+- Papago는 레거시 provider로 제거된 상태를 유지하며 smoke report에는 `legacy_disabled`로 기록한다.
 
 ## 2026-06-04 HMAC 요청 서명 인증
 - `omnilens.security.signature.enabled`가 켜진 경우 보호 API 요청에 HMAC-SHA256 서명을 요구한다.
@@ -314,6 +319,11 @@
 - 미지원 종목코드는 `404 Not Found`와 `https://hana-omnilens-api/errors/stock-not-found` ProblemDetail로 반환해 validation 오류와 구분한다.
 - OpenAPI 문서에 단건 조회 path와 404 응답을 추가했다.
 - MockMvc 테스트로 정상 조회, 미지원 종목 404, 잘못된 종목코드 validation 실패를 검증했다.
+
+## 2026-06-20 Stock detail contract 복구
+- `GET /api/v1/market/stocks/{stockCode}/detail`을 추가해 Stock-exchange-BE가 기대하던 종목 상세 계약을 복구했다.
+- 응답은 quote, 현지통화 가격, KIS 외국인 보유 snapshot/cache, 한도소진율 예측 min/max, VI, 단일가, 상·하한가, 거래정지, 주문 가능 여부를 하나의 `StockDetail` payload로 반환한다.
+- OpenAPI와 MockMvc 테스트를 갱신해 feature 브랜치 간 REST 계약 불일치를 재발견 가능하게 했다.
 
 ## 2026-06-19 Market REST 공동 응답 정합화
 - `GET /api/v1/market/stocks/{stockCode}`와 `PUT /api/v1/market/exchange-rates/{currency}`가 `ApiResponse` envelope을 반환하도록 정리했다.
