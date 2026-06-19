@@ -1,5 +1,7 @@
 package com.hana.omnilens.provider.ai;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -23,15 +25,30 @@ public class HannahAiAnalysisClient {
     }
 
     public HannahAiAnalysisResponse analyze(HannahAiAnalysisRequest request) {
-        HannahAiAnalysisResponse response = resiliencePolicy.execute("hannah-ai-analysis", () -> restClient.post()
+        HannahAiApiResponse<HannahAiAnalysisResponse> response = resiliencePolicy.execute("hannah-ai-analysis", () -> restClient.post()
                 .uri("/api/v1/alerts/analyze")
                 .body(request)
                 .retrieve()
-                .body(HannahAiAnalysisResponse.class));
+                .body(HannahAiAnalysisEnvelope.TYPE));
 
-        if (response == null) {
+        if (response == null || !response.success() || response.data() == null) {
             throw new IllegalStateException("Hannah AI returned an empty analysis response");
         }
-        return response;
+        return response.data();
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record HannahAiApiResponse<T>(
+            boolean success,
+            String code,
+            String message,
+            T data
+    ) {
+    }
+
+    private static final class HannahAiAnalysisEnvelope {
+        private static final org.springframework.core.ParameterizedTypeReference<
+                HannahAiApiResponse<HannahAiAnalysisResponse>> TYPE = new org.springframework.core.ParameterizedTypeReference<>() {
+                };
     }
 }
