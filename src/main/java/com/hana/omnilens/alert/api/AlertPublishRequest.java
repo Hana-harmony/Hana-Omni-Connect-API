@@ -29,6 +29,10 @@ public record AlertPublishRequest(
         List<AlertGlossaryTerm> glossaryTerms,
         List<String> translationQualityFlags,
         @Size(max = 128) String duplicateKey,
-        @Size(max = 120) String modelVersion
+        @Size(max = 120) String modelVersion,
+        Double eventConfidence,
+        Double sentimentConfidence,
+        Double importanceConfidence,
+        Double stockMatchConfidence
 ) {
 }

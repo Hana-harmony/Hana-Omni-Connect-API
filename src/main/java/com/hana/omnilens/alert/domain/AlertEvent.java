@@ -24,6 +24,10 @@ public record AlertEvent(
         List<String> translationQualityFlags,
         String duplicateKey,
         String modelVersion,
+        Double eventConfidence,
+        Double sentimentConfidence,
+        Double importanceConfidence,
+        Double stockMatchConfidence,
         Instant createdAt
 ) {
 }

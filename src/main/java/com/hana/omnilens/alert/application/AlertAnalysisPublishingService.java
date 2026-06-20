@@ -68,7 +68,11 @@ public class AlertAnalysisPublishingService {
                 toAlertGlossaryTerms(analysis.glossaryTerms()),
                 analysis.translationQualityFlags() == null ? List.of() : analysis.translationQualityFlags(),
                 analysis.duplicateKey(),
-                analysis.modelVersion());
+                analysis.modelVersion(),
+                analysis.eventConfidence(),
+                analysis.sentimentConfidence(),
+                analysis.importanceConfidence(),
+                analysis.stockMatchConfidence());
     }
 
     public AlertEvent publishAnalyzed(AlertPublishRequest request) {

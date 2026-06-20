@@ -178,7 +178,11 @@ class AlertControllerTest {
                 List.of(new HannahAiGlossaryTerm("실적", "실적", "earnings", "event")),
                 List.of("FINANCIAL_GLOSSARY_APPLIED"),
                 "duplicate-key",
-                "financial-keyword-baseline-2026-06-04"));
+                "financial-keyword-baseline-2026-06-04",
+                0.91,
+                0.89,
+                0.93,
+                1.0));
         when(alertTitleTranslationService.translateTitle("삼성전자 실적 개선"))
                 .thenReturn("Samsung Electronics earnings improve");
 
@@ -217,7 +221,9 @@ class AlertControllerTest {
                 .andExpect(jsonPath("$.data.glossaryTerms[0].englishTerm", equalTo("earnings")))
                 .andExpect(jsonPath("$.data.translationQualityFlags[0]", equalTo("FINANCIAL_GLOSSARY_APPLIED")))
                 .andExpect(jsonPath("$.data.duplicateKey", equalTo("duplicate-key")))
-                .andExpect(jsonPath("$.data.modelVersion", equalTo("financial-keyword-baseline-2026-06-04")));
+                .andExpect(jsonPath("$.data.modelVersion", equalTo("financial-keyword-baseline-2026-06-04")))
+                .andExpect(jsonPath("$.data.eventConfidence", equalTo(0.91)))
+                .andExpect(jsonPath("$.data.stockMatchConfidence", equalTo(1.0)));
     }
 
     @Test
@@ -265,7 +271,11 @@ class AlertControllerTest {
                     List.of(new HannahAiGlossaryTerm("실적", "실적", "earnings", "event")),
                     List.of("FINANCIAL_GLOSSARY_APPLIED"),
                     "duplicate-key",
-                    "financial-ml-tfidf-logreg-test");
+                    "financial-ml-tfidf-logreg-test",
+                    0.91,
+                    0.89,
+                    0.93,
+                    1.0);
         });
         when(alertTitleTranslationService.translateTitle(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));

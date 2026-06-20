@@ -62,7 +62,11 @@ class HannahAiAnalysisClientTest {
                             ],
                             "translation_quality_flags": ["FINANCIAL_GLOSSARY_APPLIED"],
                             "duplicate_key": "duplicate-key",
-                            "model_version": "financial-keyword-baseline-2026-06-04"
+                            "model_version": "financial-keyword-baseline-2026-06-04",
+                            "event_confidence": 0.91,
+                            "sentiment_confidence": 0.89,
+                            "importance_confidence": 0.93,
+                            "stock_match_confidence": 1.0
                           },
                           "timestamp": "2026-06-20T00:00:00Z"
                         }
@@ -87,6 +91,8 @@ class HannahAiAnalysisClientTest {
         assertThat(response.glossaryTerms().get(0).englishTerm()).isEqualTo("earnings");
         assertThat(response.translationQualityFlags()).containsExactly("FINANCIAL_GLOSSARY_APPLIED");
         assertThat(response.modelVersion()).isEqualTo("financial-keyword-baseline-2026-06-04");
+        assertThat(response.eventConfidence()).isEqualTo(0.91);
+        assertThat(response.stockMatchConfidence()).isEqualTo(1.0);
         server.verify();
     }
 }

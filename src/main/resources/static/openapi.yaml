@@ -1647,6 +1647,34 @@ components:
             - "null"
           maxLength: 120
           description: AI model version that produced this alert analysis.
+        eventConfidence:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1
+          description: Event tag confidence propagated from Hannah-Montana-AI.
+        sentimentConfidence:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1
+          description: Sentiment confidence propagated from Hannah-Montana-AI.
+        importanceConfidence:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1
+          description: Importance confidence propagated from Hannah-Montana-AI.
+        stockMatchConfidence:
+          type:
+            - number
+            - "null"
+          minimum: 0
+          maximum: 1
+          description: Stock mapping confidence propagated from Hannah-Montana-AI.
     AlertGlossaryTerm:
       type: object
       required:
