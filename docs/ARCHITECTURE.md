@@ -43,6 +43,7 @@
 - `MarketDataService`는 KIS 실시간 호가 cache를 우선 사용하고, 장외 또는 초기 구동처럼 cache가 비어 있으면 KIS REST 호가 snapshot으로 orderbook 응답을 보강한다.
 - `MarketQuoteWebSocketHandler`는 raw WebSocket `/ws/market/quotes`에서 인증된 협력사 연결을 관리하고, `RealtimeMarketDataIngestionService`가 KIS 체결 tick을 수신하면 KRW/현지통화/FX metadata가 포함된 `MarketQuote` JSON을 송신한다.
 - 협력사가 `QUOTE_STREAM_REPLAY` 메시지를 보내면 현재 quote snapshot을 요청 통화 기준으로 재송신한다.
+- 협력사가 `QUOTE_STREAM_SUBSCRIBE` 메시지와 `stockCodes`를 보내면 `KisRealtimeSessionRunner`가 지원 종목·중복·KIS app key 구독 한도를 검증한 뒤 같은 KIS WebSocket 세션에 추가 구독 프레임을 전송한다. 이 경로는 현지 거래소 상세 화면 진입 종목을 수요 기반으로 즉시 실시간화하기 위한 계약이다.
 - `MarketDataService`는 KRX 외국인보유량 cache에 snapshot이 있으면 외국인 보유수량, 지분율, 한도소진율을 quote payload에 반영한다. KIS 실시간 체결가·호가 WebSocket은 가격·호가·상태 전용이며 외국인 보유량 필드를 제공하지 않는다.
 - 주문 가능 여부 boundary는 KRX snapshot상 외국인 취득한도 제한 종목일 때만 외국인 보유 시계열 예측을 사용한다. 장전 batch가 Hannah-Montana-AI 모델로 금일 예측을 선계산해 cache에 저장하고, API 요청은 cache hit를 우선 반환한다. cache miss 또는 AI 장애 시 OmniLens 내부 시계열 엔진으로 fallback한다. 제한이 없는 종목은 `FOREIGN_LIMIT_NOT_APPLICABLE`로 반환한다. 외국인 한도 예측은 주문 차단 조건이 아니라 프론트 사전 고지용 경고 신호로만 사용한다.
 - `GET /api/v1/market/stocks/{stockCode}/global-peers`는 종목 master metadata를 Hannah-Montana-AI 글로벌 피어 모델에 전달해 외국인 투자자용 peer popup copy, 미국 상장 peer 목록, 섹터·산업·사업모델·규모·재무 기반 매칭 근거를 반환한다. Hannah 장애 시 검증된 anchor 종목은 OmniLens fallback copy로 응답을 유지한다.
@@ -57,4 +58,5 @@
 - 뉴스·공시 중복 재발행 방지는 Redis TTL 기반 dedupe를 기본으로 사용하고, Redis 장애 시 프로세스 단위 in-memory fallback을 사용한다.
 - v2에서는 watchlist 수집 경로와 별도로 전체 종목 shard 스케줄러를 둔다. 처리된 뉴스·공시는 DB 이벤트 저장소에 먼저 저장하고, canonical URL/content hash/AI duplicate key/cluster key로 중복을 줄인 뒤 REST 목록·상세와 WebSocket 이벤트를 같은 저장 레코드에서 만든다.
 - 전문과 이미지 URL은 Naver Search row에서 직접 얻는 값이 아니다. 사용 허가된 원문 URL 또는 공시 원문에서 수집하고, 전문을 저장한 뒤 동일 레코드에서 REST 목록·상세와 WebSocket payload를 만든다.
+- 한국 증시 시장뉴스는 종목별 alert와 별도 테이블 `market_news_event`에 저장하고 `/api/v1/market/news`, `/api/v1/market/news/{newsId}`, `/api/v1/market/news/collect`로 제공한다. 기본 검색어는 `한국 증시`, `코스피 코스닥`, `국내 증시`이며 원문 보강 가능 시 전문·이미지 URL을 함께 보관한다.
 - WebSocket subscription 계약 테스트가 실제 STOMP client로 topic 수신과 협력사 topic 권한을 검증한다.

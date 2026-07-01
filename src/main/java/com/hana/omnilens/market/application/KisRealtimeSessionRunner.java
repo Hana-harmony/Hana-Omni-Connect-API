@@ -1,28 +1,31 @@
 package com.hana.omnilens.market.application;
 
-import java.util.ArrayList;
 import java.time.Clock;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.hana.omnilens.config.ExternalProviderProperties;
 import com.hana.omnilens.config.KisRealtimeProperties;
 import com.hana.omnilens.market.domain.StockSummary;
+import com.hana.omnilens.provider.market.KisRealtimeApprovalKeyProvider;
 import com.hana.omnilens.provider.market.KisRealtimeSubscriptionFrame;
 import com.hana.omnilens.provider.market.KisRealtimeSubscriptionFrameFactory;
 import com.hana.omnilens.provider.market.KisRealtimeSubscriptionType;
 import com.hana.omnilens.provider.market.KisRealtimeTransaction;
 import com.hana.omnilens.provider.market.KisRealtimeWebSocketConnection;
-import com.hana.omnilens.provider.market.KisRealtimeApprovalKeyProvider;
 
 @Component
 public class KisRealtimeSessionRunner {
@@ -41,6 +44,9 @@ public class KisRealtimeSessionRunner {
     private final KisRealtimeApprovalKeyProvider approvalKeyProvider;
     private final StockMasterRepository stockMasterRepository;
     private final Clock clock;
+    private final Set<String> activeStockCodes = ConcurrentHashMap.newKeySet();
+    private final Set<String> activeSubscriptionFrameKeys = ConcurrentHashMap.newKeySet();
+    private volatile String activeApprovalKey;
 
     @Autowired
     public KisRealtimeSessionRunner(
@@ -96,6 +102,9 @@ public class KisRealtimeSessionRunner {
         try {
             String approvalKey = approvalKeyProvider.approvalKey();
             List<KisRealtimeSubscriptionFrame> frames = subscriptionFrames(approvalKey, stockCodes, indexCodes);
+            this.activeApprovalKey = approvalKey;
+            this.activeStockCodes.addAll(stockCodesForFrames(frames));
+            this.activeSubscriptionFrameKeys.addAll(frameKeys(frames));
             log.info(
                     "Starting KIS realtime session stockCount={} indexCount={} subscriptionFrameCount={} subscriptionLimit={} orderBookEnabled={} afterHoursEnabled={} marketSession={}",
                     stockCodes.size(),
@@ -113,6 +122,64 @@ public class KisRealtimeSessionRunner {
             // 외부 승인키/웹소켓 장애가 API 기동 실패로 전파되지 않게 한다.
             log.warn("KIS realtime session start failed: {}", exception.toString());
         }
+    }
+
+    public KisRealtimeDynamicSubscriptionResult subscribeStockCodes(List<String> requestedStockCodes) {
+        if (!kisRealtimeProperties.enabled()) {
+            return disabledResult();
+        }
+        List<String> normalizedStockCodes = normalizeStockCodes(requestedStockCodes);
+        if (normalizedStockCodes.isEmpty()) {
+            return new KisRealtimeDynamicSubscriptionResult(
+                    true,
+                    subscriptionFrameLimit(),
+                    activeSubscriptionFrameCount(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of());
+        }
+        String approvalKey = activeApprovalKey;
+        if (approvalKey == null || approvalKey.isBlank()) {
+            approvalKey = approvalKeyProvider.approvalKey();
+            activeApprovalKey = approvalKey;
+        }
+
+        List<String> subscribed = new ArrayList<>();
+        List<String> alreadySubscribed = new ArrayList<>();
+        List<String> unsupported = new ArrayList<>();
+        List<String> rejected = new ArrayList<>();
+        List<KisRealtimeSubscriptionFrame> newFrames = new ArrayList<>();
+        for (String stockCode : normalizedStockCodes) {
+            if (activeStockCodes.contains(stockCode)) {
+                alreadySubscribed.add(stockCode);
+                continue;
+            }
+            if (stockMasterRepository.findByCode(stockCode).isEmpty()) {
+                unsupported.add(stockCode);
+                continue;
+            }
+            List<KisRealtimeSubscriptionFrame> frames = subscriptionFrames(approvalKey, List.of(stockCode), List.of());
+            if (activeSubscriptionFrameCount() + newFrames.size() + frames.size() > subscriptionFrameLimit()) {
+                rejected.add(stockCode);
+                continue;
+            }
+            newFrames.addAll(frames);
+            subscribed.add(stockCode);
+        }
+        if (!newFrames.isEmpty()) {
+            webSocketConnection.subscribe(newFrames);
+            activeStockCodes.addAll(subscribed);
+            activeSubscriptionFrameKeys.addAll(frameKeys(newFrames));
+        }
+        return new KisRealtimeDynamicSubscriptionResult(
+                true,
+                subscriptionFrameLimit(),
+                activeSubscriptionFrameCount(),
+                subscribed,
+                alreadySubscribed,
+                unsupported,
+                rejected);
     }
 
     List<KisRealtimeSubscriptionFrame> subscriptionFrames(String approvalKey, List<String> stockCodes) {
@@ -154,8 +221,8 @@ public class KisRealtimeSessionRunner {
                 frames.add(frameFactory.create(
                         approvalKey,
                         KisRealtimeTransaction.ORDERBOOK,
-                    KisRealtimeSubscriptionType.SUBSCRIBE,
-                    stockCode));
+                        KisRealtimeSubscriptionType.SUBSCRIBE,
+                        stockCode));
             }
         }
         for (String indexCode : indexCodes) {
@@ -194,6 +261,50 @@ public class KisRealtimeSessionRunner {
 
     private int subscriptionFrameLimit() {
         return Math.min(kisRealtimeProperties.shardSize(), KIS_APP_KEY_SUBSCRIPTION_LIMIT);
+    }
+
+    private int activeSubscriptionFrameCount() {
+        return activeSubscriptionFrameKeys.size();
+    }
+
+    private List<String> normalizeStockCodes(List<String> requestedStockCodes) {
+        if (requestedStockCodes == null) {
+            return List.of();
+        }
+        return requestedStockCodes.stream()
+                .filter(stockCode -> stockCode != null && stockCode.matches("\\d{6}"))
+                .collect(java.util.stream.Collectors.collectingAndThen(
+                        java.util.stream.Collectors.toCollection(LinkedHashSet::new),
+                        List::copyOf));
+    }
+
+    private List<String> stockCodesForFrames(List<KisRealtimeSubscriptionFrame> frames) {
+        return frames.stream()
+                .map(frame -> frame.body().input().trKey())
+                .filter(trKey -> trKey != null && trKey.matches("\\d{6}"))
+                .distinct()
+                .toList();
+    }
+
+    private List<String> frameKeys(List<KisRealtimeSubscriptionFrame> frames) {
+        return frames.stream()
+                .map(this::frameKey)
+                .toList();
+    }
+
+    private String frameKey(KisRealtimeSubscriptionFrame frame) {
+        return frame.body().input().trId() + ":" + frame.body().input().trKey();
+    }
+
+    private KisRealtimeDynamicSubscriptionResult disabledResult() {
+        return new KisRealtimeDynamicSubscriptionResult(
+                false,
+                subscriptionFrameLimit(),
+                activeSubscriptionFrameCount(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of());
     }
 
     private enum MarketSession {
