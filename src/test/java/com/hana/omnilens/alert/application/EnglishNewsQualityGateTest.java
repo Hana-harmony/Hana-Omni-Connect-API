@@ -82,6 +82,12 @@ class EnglishNewsQualityGateTest {
         assertThat(EnglishNewsQualityGate.hasUsableEnglishText(
                 "The move-digest service was opened at the Youth Center of the 3rd Army of the Republic of China."))
                 .isFalse();
+        assertThat(EnglishNewsQualityGate.hasUsableEnglishText("…Korean stock market"))
+                .isFalse();
+        assertThat(EnglishNewsQualityGate.hasUsableEnglishText("[Korean stock market ]..."))
+                .isFalse();
+        assertThat(EnglishNewsQualityGate.hasUsableEnglishText("Korean stock market"))
+                .isFalse();
         assertThat(EnglishNewsQualityGate.hasUsableEnglishText(
                 "The original Korean text is retained because machine translation was unavailable. Review the linked article or filing for price, liquidity, and portfolio impact."))
                 .isFalse();
@@ -103,6 +109,14 @@ class EnglishNewsQualityGateTest {
                 .isEmpty();
         assertThat(EnglishNewsQualityGate.englishSummaryLineOrEmpty(
                 "(WTI) 72.69 3% surge (-4.60%), (-3.43%) stock price, SK (-6.34%), (-10.25%) IT· ·."))
+                .isEmpty();
+        assertThat(EnglishNewsQualityGate.englishSummaryLineOrEmpty("< > 5."))
+                .isEmpty();
+        assertThat(EnglishNewsQualityGate.englishSummaryLineOrEmpty("167% 60%."))
+                .isEmpty();
+        assertThat(EnglishNewsQualityGate.englishSummaryLineOrEmpty("KOSPI 8 5% 7200."))
+                .isEmpty();
+        assertThat(EnglishNewsQualityGate.englishSummaryLineOrEmpty("KOSPI, 5%."))
                 .isEmpty();
     }
 
