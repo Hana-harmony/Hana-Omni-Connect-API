@@ -2,7 +2,6 @@ package com.hana.omnilens.alert.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -87,7 +86,7 @@ class AlertTitleTranslationServiceTest {
     }
 
     @Test
-    void translateTextSplitsLongContentIntoChunks() {
+    void translateTextSendsFullArticleWithinHannahRequestLimitWithoutChunking() {
         String longText = "삼성전자는 AI 서버 투자 확대로 실적 개선 기대가 커졌다. ".repeat(300);
         when(hannahTranslationClient.translate(any()))
                 .thenAnswer(invocation -> {
@@ -98,7 +97,7 @@ class AlertTitleTranslationServiceTest {
         String translatedText = translationService.translateText(longText);
 
         assertThat(translatedText).contains("EN:");
-        verify(hannahTranslationClient, atLeast(2)).translate(any());
+        verify(hannahTranslationClient, times(1)).translate(any());
     }
 
     @Test

@@ -45,8 +45,14 @@ public class OriginalArticleClient {
             ".article-body-only",
             "#articleBody",
             "#article_body",
+            "#CmAdContent",
+            "#cont_newstext",
+            ".detail-body",
+            ".view_con_text",
             ".news_body",
+            ".news-content",
             ".article_body",
+            ".article-body",
             "#news_body",
             ".article-view-content",
             ".article_content",
@@ -140,6 +146,8 @@ public class OriginalArticleClient {
         ResponseEntity<String> response = restClient.get()
                 .uri(uri)
                 .header("User-Agent", "Hana-OmniLensBot/1.0 (+https://github.com/Hana-harmony)")
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
                 .retrieve()
                 .toEntity(String.class);
         if (response.getStatusCode().is3xxRedirection()) {

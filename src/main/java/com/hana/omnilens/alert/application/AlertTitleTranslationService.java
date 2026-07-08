@@ -26,7 +26,7 @@ import com.hana.omnilens.provider.ai.HannahAiKoreanTranslationResponse;
 public class AlertTitleTranslationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AlertTitleTranslationService.class);
-    private static final int MAX_CHUNK_CHARS = 1_800;
+    private static final int MAX_CHUNK_CHARS = 20_000;
     private static final Pattern HANGUL_PATTERN = Pattern.compile("[가-힣]");
     public static final String STATUS_TRANSLATED = "TRANSLATED";
     public static final String STATUS_PARTIAL_SOURCE_LANGUAGE_FALLBACK = "PARTIAL_SOURCE_LANGUAGE_FALLBACK";
