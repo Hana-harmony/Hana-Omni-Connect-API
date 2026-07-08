@@ -137,6 +137,18 @@ class EnglishNewsQualityGateTest {
     }
 
     @Test
+    void keepsLongArticleTranslationWithUnlistedHyphenatedTerms() {
+        String translatedArticle = """
+                A government-led-private-sector investment program expanded as overseas investors rotated
+                back into Korean equities. The article said semiconductor, shipbuilding, battery, and
+                platform companies drew attention as exchange-traded fund demand increased.
+                """.repeat(12);
+
+        assertThat(EnglishNewsQualityGate.hasUsableEnglishText(translatedArticle))
+                .isTrue();
+    }
+
+    @Test
     void keepsPharmaBiotechPbrSummaryLines() {
         assertThat(EnglishNewsQualityGate.englishSummaryLineOrEmpty(
                 "Pharma and biotech stocks showed widespread undervaluation as many healthcare companies traded below 1x PBR."))

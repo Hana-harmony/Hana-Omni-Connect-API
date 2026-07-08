@@ -318,6 +318,9 @@ public final class EnglishNewsQualityGate {
                 || lower.contains("republic of china")) {
             return true;
         }
+        if (lower.length() >= 1_000) {
+            return false;
+        }
         return Pattern.compile("\\b[a-z][a-z]+(?:-[a-z][a-z]+){2,}(?:'s)?\\b")
                 .matcher(lower)
                 .results()
