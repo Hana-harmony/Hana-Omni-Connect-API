@@ -604,7 +604,8 @@ public class AlertAnalysisPublishingService {
         }
         if (!AlertTitleTranslationService.STATUS_TRANSLATED.equals(result.status())
                 && EnglishNewsQualityGate.containsHangul(originalContent)) {
-            return "";
+            throw new IllegalStateException("English translation failed: "
+                    + context + " (" + translationFailureDetails(result) + ")");
         }
         if (!hasCompleteEnglishTranslationStatus(result)) {
             throw new IllegalStateException("English translation failed: "
@@ -616,9 +617,7 @@ public class AlertAnalysisPublishingService {
                     + context + " (" + translationFailureDetails(result) + ")");
         }
         if (!AlertTitleTranslationService.STATUS_TRANSLATED.equals(result.status())) {
-            return EnglishNewsQualityGate.containsHangul(originalContent)
-                    ? ""
-                    : englishText;
+            return englishText;
         }
         if (isLikelyIncompleteTranslation(originalContent, englishText)) {
             throw new IllegalStateException("English translation incomplete: "

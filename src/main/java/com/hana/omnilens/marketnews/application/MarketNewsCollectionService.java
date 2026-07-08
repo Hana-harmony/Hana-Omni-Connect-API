@@ -416,12 +416,32 @@ public class MarketNewsCollectionService {
         List<String> imageUrls = refreshedContent.imageUrls() == null || refreshedContent.imageUrls().isEmpty()
                 ? storedContent.imageUrls()
                 : refreshedContent.imageUrls();
+        String selectedContent = shouldReplaceStoredContent(storedContent, refreshedContent)
+                ? refreshedContent.content()
+                : storedContent.content();
         return new OriginalArticleContent(
-                storedContent.content(),
+                selectedContent,
                 imageUrls,
                 firstText(refreshedContent.canonicalUrl(), storedContent.canonicalUrl()),
-                sha256(storedContent.content()),
+                sha256(selectedContent),
                 firstText(refreshedContent.sourceLicensePolicy(), storedContent.sourceLicensePolicy()));
+    }
+
+    private boolean shouldReplaceStoredContent(
+            OriginalArticleContent storedContent,
+            OriginalArticleContent refreshedContent) {
+        String stored = storedContent.content() == null ? "" : storedContent.content().strip();
+        String refreshed = refreshedContent.content() == null ? "" : refreshedContent.content().strip();
+        if (!StringUtils.hasText(refreshed)) {
+            return false;
+        }
+        if (!StringUtils.hasText(stored)) {
+            return true;
+        }
+        if (hasTruncationMarker(stored)) {
+            return refreshed.length() > stored.length();
+        }
+        return refreshed.length() >= stored.length() + 80;
     }
 
     private Optional<OriginalArticleContent> fullContentFromEvent(MarketNewsEvent event) {
@@ -622,7 +642,8 @@ public class MarketNewsCollectionService {
         }
         if (!AlertTitleTranslationService.STATUS_TRANSLATED.equals(result.status())
                 && EnglishNewsQualityGate.containsHangul(originalContent)) {
-            return "";
+            throw new IllegalStateException("English translation failed: "
+                    + context + " (" + translationFailureDetails(result) + ")");
         }
         if (!hasCompleteEnglishTranslationStatus(result)) {
             throw new IllegalStateException("English translation failed: "
@@ -634,9 +655,7 @@ public class MarketNewsCollectionService {
                     + context + " (" + translationFailureDetails(result) + ")");
         }
         if (!AlertTitleTranslationService.STATUS_TRANSLATED.equals(result.status())) {
-            return EnglishNewsQualityGate.containsHangul(originalContent)
-                    ? ""
-                    : englishText;
+            return englishText;
         }
         if (isLikelyIncompleteTranslation(originalContent, englishText)) {
             throw new IllegalStateException("English translation incomplete: "
