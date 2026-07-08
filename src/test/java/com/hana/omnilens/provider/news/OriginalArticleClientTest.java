@@ -184,6 +184,75 @@ class OriginalArticleClientTest {
     }
 
     @Test
+    void fetchExtractsYtnArticleBodyInsteadOfMetaDescription() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OriginalArticleClient client = new OriginalArticleClient(builder, ProviderTestResilience.disabled());
+
+        server.expect(requestTo("https://news.example.com/ytn"))
+                .andRespond(withSuccess("""
+                        <html>
+                          <head>
+                            <meta name="description" content="코스피 5% 하락 단문 요약">
+                            <meta property="og:image" content="/images/ytn.jpg">
+                          </head>
+                          <body>
+                            <div id="CmAdContent" class="paragraph">
+                              <span>[앵커]<br />
+                              코스피와 코스닥이 극심한 변동성을 보인 끝에 나란히 5% 넘게 급락 마감했습니다.<br />
+                              반도체 불안과 중동발 지정학적 위험이 투자심리를 크게 위축시켰습니다.<br />
+                              매도 사이드카가 발동된 뒤에도 코스피는 7,200선에서 장을 마쳤습니다.<br />
+                              YTN 차유정 기자 chayj@ytn.co.kr</span>
+                            </div>
+                          </body>
+                        </html>
+                        """, MediaType.parseMediaType("text/html;charset=UTF-8")));
+
+        Optional<OriginalArticleContent> content = client.fetch("https://news.example.com/ytn");
+
+        assertThat(content).isPresent();
+        assertThat(content.orElseThrow().content()).contains("극심한 변동성");
+        assertThat(content.orElseThrow().content()).contains("매도 사이드카");
+        assertThat(content.orElseThrow().content()).doesNotContain("코스피 5% 하락 단문 요약");
+        assertThat(content.orElseThrow().content()).doesNotContain("chayj@ytn.co.kr");
+        server.verify();
+    }
+
+    @Test
+    void fetchExtractsKbsDetailBodyInsteadOfMetaDescription() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OriginalArticleClient client = new OriginalArticleClient(builder, ProviderTestResilience.disabled());
+
+        server.expect(requestTo("https://news.example.com/kbs-detail"))
+                .andRespond(withSuccess("""
+                        <html>
+                          <head>
+                            <meta property="og:description" content="코스닥은 전일 대비 하락했습니다.">
+                            <meta property="og:image" content="/images/kbs.jpg">
+                          </head>
+                          <body>
+                            <div class="detail-body font-size" id="cont_newstext">
+                              [앵커]<br /><br />
+                              미국과 이란의 무력 충돌이 재점화하면서 국내 증시도 흔들렸습니다.<br /><br />
+                              코스피와 코스닥 시장에서는 장중 매도 사이드카까지 발동됐습니다.<br /><br />
+                              코스피는 결국 5% 이상 떨어지며 7,246.79로 마감했습니다.<br /><br />
+                              코스닥 시장도 약 10개월 만에 800선 아래로 밀렸습니다.
+                            </div>
+                          </body>
+                        </html>
+                        """, MediaType.parseMediaType("text/html;charset=UTF-8")));
+
+        Optional<OriginalArticleContent> content = client.fetch("https://news.example.com/kbs-detail");
+
+        assertThat(content).isPresent();
+        assertThat(content.orElseThrow().content()).contains("무력 충돌");
+        assertThat(content.orElseThrow().content()).contains("7,246.79");
+        assertThat(content.orElseThrow().content()).doesNotContain("전일 대비 하락");
+        server.verify();
+    }
+
+    @Test
     void fetchFollowsSafePublisherRedirectBeforeParsing() {
         RestClient.Builder builder = RestClient.builder();
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();

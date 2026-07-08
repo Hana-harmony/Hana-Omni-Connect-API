@@ -1,5 +1,6 @@
 package com.hana.omnilens.marketnews.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -509,13 +510,19 @@ class MarketNewsControllerTest {
                         .header("X-HANA-OMNILENS-API-KEY", "test-api-key")
                         .param("limit", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.newsCount", equalTo(1)))
-                .andExpect(jsonPath("$.data.news[0].translatedContent", equalTo("")))
-                .andExpect(jsonPath("$.data.news[0].contentAvailability", equalTo("ORIGINAL_TEXT_ONLY")));
+                .andExpect(jsonPath("$.data.newsCount", equalTo(0)));
+
+        String persistedJson = jdbcTemplate.queryForObject(
+                "SELECT event_json FROM market_news_event WHERE news_id = ?",
+                String.class,
+                "mkt-source-fallback-content");
+        assertThat(persistedJson).contains(
+                "\"translatedContent\": \"What: Samsung Electronics expects earnings to improve as HBM demand expands.");
+        assertThat(persistedJson).doesNotContain("\"contentAvailability\": \"ORIGINAL_TEXT_ONLY\"");
     }
 
     @Test
-    void reprocessByNewsIdRefetchesMissingOriginalContentImagesAndGlossaryDescriptions() throws Exception {
+    void reprocessByNewsIdRefetchesShortOriginalContentImagesAndGlossaryDescriptions() throws Exception {
         jdbcTemplate.update(
                 """
                 INSERT INTO market_news_event (
@@ -542,10 +549,10 @@ class MarketNewsControllerTest {
                     "impact": ""
                   },
                   "translatedSummary": "",
-                  "originalContent": "",
+                  "originalContent": "코스피 5% 하락 단문 요약",
                   "translatedContent": "",
                   "imageUrls": [],
-                  "contentAvailability": "DISCOVERY_ONLY",
+                  "contentAvailability": "SUMMARY_ONLY",
                   "originalUrl": "https://news.example.com/market/samjeon-nix",
                   "canonicalUrl": "https://news.example.com/market/samjeon-nix",
                   "sourceLicensePolicy": "DISCOVERY_ONLY",
