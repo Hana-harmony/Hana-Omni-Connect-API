@@ -12,7 +12,7 @@ server:
 
 omnilens:
   security:
-    api-key-sha256: ${OMNILENS_API_KEY_SHA256:}
+    api-key-sha256: ${OMNILENS_API_KEY_SHA256}
     cors-allowed-origins: ${OMNILENS_CORS_ALLOWED_ORIGINS}
     rate-limit:
       enabled: ${OMNILENS_RATE_LIMIT_ENABLED:true}
