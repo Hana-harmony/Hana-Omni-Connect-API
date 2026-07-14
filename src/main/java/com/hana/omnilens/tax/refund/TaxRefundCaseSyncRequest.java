@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public record TaxRefundCaseSyncRequest(
-        @NotBlank String caseId,
+        @NotBlank @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId,
         @NotBlank String accountId,
         @NotBlank String userId,
         int taxYear,

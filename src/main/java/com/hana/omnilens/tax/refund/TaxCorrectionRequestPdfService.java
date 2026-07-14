@@ -3,8 +3,11 @@ package com.hana.omnilens.tax.refund;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -12,6 +15,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +25,29 @@ public class TaxCorrectionRequestPdfService {
 
     private static final String TEMPLATE = "forms/tax-correction-request.pdf";
     private static final String FONT = "fonts/NanumBarunGothic.ttf";
+    private static final float PREVIEW_DPI = 144;
+    private static final List<FieldPlacement> FIELD_PLACEMENTS = List.of(
+            field("receiptNumber", "접수번호", 130, 733, 85, 8),
+            field("receiptDate", "접수일자", 300, 733, 85, 8),
+            field("claimantName", "청구인 성명", 173, 701, 170, 9),
+            field("birthDate", "생년월일", 432, 701, 90, 8),
+            field("taxpayerIdentificationNumber", "납세자번호", 194, 674, 95, 8),
+            field("claimantPhone", "전화번호", 441, 674, 90, 8),
+            field("claimantResidence", "거주지국", 194, 645, 150, 8),
+            field("residencyCountryCode", "거주지국 코드", 522, 645, 32, 8),
+            field("claimantAddress", "주소", 173, 617, 360, 8),
+            field("agentName", "대리인 성명", 202, 583, 135, 8),
+            field("agentPhone", "대리인 전화번호", 441, 583, 90, 8),
+            field("agentAddress", "대리인 주소", 173, 558, 360, 8),
+            field("withholdingAgentName", "원천징수의무자 성명", 202, 525, 135, 8),
+            field("withholdingAgentTaxId", "원천징수의무자 납세자번호", 441, 525, 85, 8),
+            field("taxOffice", "세무서", 202, 500, 135, 8),
+            field("withholdingAgentPhone", "원천징수의무자 전화번호", 480, 500, 75, 8),
+            field("withholdingAgentAddress", "원천징수의무자 주소", 173, 475, 360, 8),
+            new FieldPlacement("claimContent", "청구 내용", 125, 437, 405, 8, 390, 58, true),
+            new FieldPlacement("applicationDate", "신청일", 405, 333, 130, 8, 327, 16, false),
+            field("claimantSignatureName", "청구인 서명 성명", 400, 306, 130, 9),
+            field("agentSignatureName", "대리인 서명 성명", 400, 288, 130, 9));
 
     public byte[] render(Map<String, String> fields) {
         try (InputStream template = new ClassPathResource(TEMPLATE).getInputStream();
@@ -35,31 +63,49 @@ public class TaxCorrectionRequestPdfService {
         }
     }
 
+    public TemplateLayout templateLayout() {
+        try (InputStream template = new ClassPathResource(TEMPLATE).getInputStream();
+             PDDocument document = Loader.loadPDF(template.readAllBytes())) {
+            PDPage page = document.getPage(0);
+            return new TemplateLayout(
+                    page.getMediaBox().getWidth(),
+                    page.getMediaBox().getHeight(),
+                    document.getNumberOfPages(),
+                    FIELD_PLACEMENTS.stream().map(FieldPlacement::editorField).toList());
+        } catch (IOException exception) {
+            throw new IllegalStateException("The trusted correction-request form layout could not be loaded.", exception);
+        }
+    }
+
+    public byte[] templatePage(int pageNumber) {
+        try (InputStream template = new ClassPathResource(TEMPLATE).getInputStream();
+             PDDocument document = Loader.loadPDF(template.readAllBytes())) {
+            if (pageNumber < 1 || pageNumber > document.getNumberOfPages()) {
+                throw new IllegalArgumentException("Correction-request template page is out of range.");
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            ImageIO.write(new PDFRenderer(document).renderImageWithDPI(pageNumber - 1, PREVIEW_DPI, ImageType.RGB), "png", output);
+            return output.toByteArray();
+        } catch (IOException exception) {
+            throw new IllegalStateException("The trusted correction-request form preview could not be rendered.", exception);
+        }
+    }
+
     private void overlay(PDDocument document, Map<String, String> fields, PDFont font) throws IOException {
         PDPage page = document.getPage(0);
         try (PDPageContentStream stream = new PDPageContentStream(
                 document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-            text(stream, font, fields, "receiptNumber", 130, 733, 8, 85);
-            text(stream, font, fields, "receiptDate", 300, 733, 8, 85);
-            text(stream, font, fields, "claimantName", 173, 701, 9, 170);
-            text(stream, font, fields, "birthDate", 432, 701, 8, 90);
-            text(stream, font, fields, "taxpayerIdentificationNumber", 194, 674, 8, 95);
-            text(stream, font, fields, "claimantPhone", 441, 674, 8, 90);
-            text(stream, font, fields, "claimantResidence", 194, 645, 8, 150);
-            text(stream, font, fields, "residencyCountryCode", 522, 645, 8, 32);
-            text(stream, font, fields, "claimantAddress", 173, 617, 8, 360);
-            text(stream, font, fields, "agentName", 202, 583, 8, 135);
-            text(stream, font, fields, "agentPhone", 441, 583, 8, 90);
-            text(stream, font, fields, "agentAddress", 173, 558, 8, 360);
-            text(stream, font, fields, "withholdingAgentName", 202, 525, 8, 135);
-            text(stream, font, fields, "withholdingAgentTaxId", 441, 525, 8, 85);
-            text(stream, font, fields, "taxOffice", 202, 500, 8, 135);
-            text(stream, font, fields, "withholdingAgentPhone", 480, 500, 8, 75);
-            text(stream, font, fields, "withholdingAgentAddress", 173, 475, 8, 360);
-            multiline(stream, font, value(fields, "claimContent"), 125, 437, 8, 70, 405);
-            date(stream, font, value(fields, "applicationDate"), 333);
-            text(stream, font, fields, "claimantSignatureName", 400, 306, 9, 130);
-            text(stream, font, fields, "agentSignatureName", 400, 288, 9, 130);
+            for (FieldPlacement placement : FIELD_PLACEMENTS) {
+                if (placement.key().equals("applicationDate")) {
+                    date(stream, font, value(fields, placement.key()), placement.baselineY());
+                } else if (placement.multiline()) {
+                    multiline(stream, font, value(fields, placement.key()), placement.x(), placement.baselineY(),
+                            placement.fontSize(), 70, placement.width());
+                } else {
+                    text(stream, font, fields, placement.key(), placement.x(), placement.baselineY(),
+                            placement.fontSize(), placement.width());
+                }
+            }
         }
     }
 
@@ -148,5 +194,44 @@ public class TaxCorrectionRequestPdfService {
 
     private String value(Map<String, String> fields, String key) {
         return fields.getOrDefault(key, "");
+    }
+
+    private static FieldPlacement field(
+            String key,
+            String label,
+            float x,
+            float baselineY,
+            float width,
+            float fontSize) {
+        return new FieldPlacement(key, label, x, baselineY, width, fontSize, baselineY - 4, 16, false);
+    }
+
+    private record FieldPlacement(
+            String key,
+            String label,
+            float x,
+            float baselineY,
+            float width,
+            float fontSize,
+            float boxBottom,
+            float boxHeight,
+            boolean multiline) {
+        private EditorField editorField() {
+            return new EditorField(key, label, 1, x, boxBottom, width, boxHeight, multiline);
+        }
+    }
+
+    public record TemplateLayout(float pageWidth, float pageHeight, int pageCount, List<EditorField> fields) {
+    }
+
+    public record EditorField(
+            String key,
+            String label,
+            int page,
+            float x,
+            float y,
+            float width,
+            float height,
+            boolean multiline) {
     }
 }

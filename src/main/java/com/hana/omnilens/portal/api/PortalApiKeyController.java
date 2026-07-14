@@ -5,6 +5,8 @@ import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -31,6 +33,7 @@ import com.hana.omnilens.term.domain.KoreanFinancialTermClickStat;
 import com.hana.omnilens.term.domain.KoreanFinancialTermClickPoint;
 import com.hana.omnilens.tax.refund.TaxRefundBackofficeCase;
 import com.hana.omnilens.tax.refund.TaxRefundBackofficeService;
+import com.hana.omnilens.tax.refund.TaxRefundIdentifiers;
 import com.hana.omnilens.tax.refund.TaxCorrectionRequestPdfService;
 import com.hana.omnilens.tax.refund.TaxRefundDocumentContent;
 
@@ -189,11 +192,32 @@ public class PortalApiKeyController {
         return ApiResponse.success(taxRefundBackofficeService.list());
     }
 
+    @GetMapping("/admin/tax/correction-request/template/layout")
+    @Operation(summary = "Load the trusted correction-request PDF editor layout")
+    public ApiResponse<TaxCorrectionRequestPdfService.TemplateLayout> correctionRequestTemplateLayout(
+            HttpServletRequest request) {
+        accessService.requireAdmin(request);
+        return ApiResponse.success(correctionRequestPdfService.templateLayout());
+    }
+
+    @GetMapping(value = "/admin/tax/correction-request/template/pages/{pageNumber}", produces = MediaType.IMAGE_PNG_VALUE)
+    @Operation(summary = "Render a trusted correction-request PDF template page")
+    public ResponseEntity<byte[]> correctionRequestTemplatePage(
+            HttpServletRequest request,
+            @PathVariable @Min(1) @Max(2) int pageNumber) {
+        accessService.requireAdmin(request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .contentType(MediaType.IMAGE_PNG)
+                .body(correctionRequestPdfService.templatePage(pageNumber));
+    }
+
     @GetMapping("/admin/tax/refund-cases/{caseId}/correction-fields")
     @Operation(summary = "Load verified document values into a correction-request editor")
     public ApiResponse<Map<String, String>> correctionFields(
             HttpServletRequest request,
-            @PathVariable @Pattern(regexp = "TAX-[A-Z0-9]{20}") String caseId) {
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId) {
         accessService.requireAdmin(request);
         return ApiResponse.success(taxRefundBackofficeService.initialCorrectionFields(caseId));
     }
@@ -202,7 +226,7 @@ public class PortalApiKeyController {
     @Operation(summary = "Load the saved correction-request editor values")
     public ApiResponse<Map<String, String>> savedCorrectionFields(
             HttpServletRequest request,
-            @PathVariable @Pattern(regexp = "TAX-[A-Z0-9]{20}") String caseId) {
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId) {
         accessService.requireAdmin(request);
         return ApiResponse.success(taxRefundBackofficeService.savedCorrectionFields(caseId));
     }
@@ -211,8 +235,8 @@ public class PortalApiKeyController {
     @Operation(summary = "View a verified tax document")
     public ResponseEntity<byte[]> taxDocument(
             HttpServletRequest request,
-            @PathVariable @Pattern(regexp = "TAX-[A-Z0-9]{20}") String caseId,
-            @PathVariable @Pattern(regexp = "TDOC-[A-Z0-9]{12}") String documentId) {
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId,
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.DOCUMENT_ID_PATTERN) String documentId) {
         accessService.requireAdmin(request);
         TaxRefundDocumentContent document = taxRefundBackofficeService.documentContent(caseId, documentId);
         return ResponseEntity.ok()
@@ -227,7 +251,7 @@ public class PortalApiKeyController {
     @Operation(summary = "Save correction-request editor values")
     public ApiResponse<Map<String, String>> saveCorrectionRequest(
             HttpServletRequest request,
-            @PathVariable @Pattern(regexp = "TAX-[A-Z0-9]{20}") String caseId,
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId,
             @Valid @RequestBody CorrectionRequestPdfRequest body) {
         PortalUser administrator = accessService.requireAdmin(request);
         byte[] pdf = correctionRequestPdfService.render(body.fields());
@@ -239,7 +263,7 @@ public class PortalApiKeyController {
     @Operation(summary = "Render a correction request PDF from verified values and administrator edits")
     public ResponseEntity<byte[]> correctionRequestPdf(
             HttpServletRequest request,
-            @PathVariable @Pattern(regexp = "TAX-[A-Z0-9]{20}") String caseId,
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId,
             @Valid @RequestBody CorrectionRequestPdfRequest body) {
         PortalUser administrator = accessService.requireAdmin(request);
         taxRefundBackofficeService.caseById(caseId);
@@ -255,7 +279,7 @@ public class PortalApiKeyController {
     @Operation(summary = "Prepare the final correction request and approve the member refund case")
     public ApiResponse<TaxRefundBackofficeCase> approveTaxRefund(
             HttpServletRequest request,
-            @PathVariable @Pattern(regexp = "TAX-[A-Z0-9]{20}") String caseId,
+            @PathVariable @Pattern(regexp = TaxRefundIdentifiers.CASE_ID_PATTERN) String caseId,
             @Valid @RequestBody CorrectionRequestPdfRequest body) {
         PortalUser administrator = accessService.requireAdmin(request);
         byte[] pdf = correctionRequestPdfService.render(body.fields());

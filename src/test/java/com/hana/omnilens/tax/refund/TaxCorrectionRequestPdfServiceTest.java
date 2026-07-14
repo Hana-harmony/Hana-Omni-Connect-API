@@ -30,6 +30,24 @@ class TaxCorrectionRequestPdfServiceTest {
         assertPosition(texts, "31", 510, 509);
     }
 
+    @Test
+    void exposesEditorCoordinatesFromTheSameTrustedTemplate() {
+        TaxCorrectionRequestPdfService service = new TaxCorrectionRequestPdfService();
+
+        TaxCorrectionRequestPdfService.TemplateLayout layout = service.templateLayout();
+        TaxCorrectionRequestPdfService.EditorField claimantName = layout.fields().stream()
+                .filter(field -> field.key().equals("claimantName"))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(layout.pageWidth()).isBetween(594f, 596f);
+        assertThat(layout.pageHeight()).isBetween(840f, 842f);
+        assertThat(layout.pageCount()).isEqualTo(2);
+        assertThat(claimantName.x()).isEqualTo(173f);
+        assertThat(claimantName.y()).isEqualTo(697f);
+        assertThat(service.templatePage(1)).startsWith(0x89, 0x50, 0x4e, 0x47);
+    }
+
     private List<PlacedText> positions(byte[] pdf) throws IOException {
         List<PlacedText> texts = new ArrayList<>();
         try (PDDocument document = Loader.loadPDF(pdf)) {
