@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -71,6 +72,20 @@ public class GlobalExceptionHandler {
                 .map(violation -> new FieldErrorDetail(
                         violation.getPropertyPath().toString(),
                         violation.getMessage()))
+                .toList();
+        return validationResponse(errors);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHandlerMethodValidation(HandlerMethodValidationException exception) {
+        List<FieldErrorDetail> errors = exception.getParameterValidationResults()
+                .stream()
+                .flatMap(result -> result.getResolvableErrors().stream()
+                        .map(error -> new FieldErrorDetail(
+                                result.getMethodParameter().getParameterName() == null
+                                        ? "request"
+                                        : result.getMethodParameter().getParameterName(),
+                                error.getDefaultMessage())))
                 .toList();
         return validationResponse(errors);
     }

@@ -54,7 +54,7 @@ class PortalApiKeyControllerTest {
     void resetAdminPassword() {
         jdbcTemplate.update("UPDATE portal_users SET password_hash = ?, password_change_required = TRUE, session_version = 0 WHERE username = 'admin'",
                 "{bcrypt}$2y$12$QYdm5Z2QBMF/9XgtNMvA5umnErMvlTRskDzg4U5wcIN5PH.X9Sf/K");
-        jdbcTemplate.update("DELETE FROM tax_refund_backoffice_cases WHERE case_id = 'TAX-ABCDEFGHIJKLMNOPQRST'");
+        jdbcTemplate.update("DELETE FROM tax_refund_backoffice_cases WHERE case_id = 'TAX-ABCDEFGHIJKL'");
     }
 
     @Test
@@ -183,7 +183,7 @@ class PortalApiKeyControllerTest {
                     verified_documents_json, status, requested_at, synced_at, tax_office_submission_status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
                 """,
-                "TAX-ABCDEFGHIJKLMNOPQRST", "ACC-ABCDEFGHIJKL", "USR-ABCDEFGHIJKL", 2025, "US", "120.00",
+                "TAX-ABCDEFGHIJKL", "ACC-ABCDEFGHIJKL", "USR-ABCDEFGHIJKL", 2025, "US", "120.00",
                 true, true, "[]",
                 "[{\"documentId\":\"DOC-1\",\"documentType\":\"RESIDENCE_CERTIFICATE\",\"fileName\":\"residence.pdf\",\"extractedFields\":{\"taxpayer_name\":\"Jane Doe\",\"residency_country_code\":\"US\"}}]",
                 "SYNCED_WITH_HANA", "NOT_SUBMITTED");
@@ -205,23 +205,39 @@ class PortalApiKeyControllerTest {
 
         mockMvc.perform(get("/api/v1/portal/me").header("Authorization", "Bearer " + initialToken))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKLMNOPQRST/correction-fields")
+        mockMvc.perform(get("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKL/correction-fields")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.claimantName").value("Jane Doe"))
                 .andExpect(jsonPath("$.data.residencyCountryCode").value("US"));
 
+        mockMvc.perform(get("/api/v1/portal/admin/tax/correction-request/template/layout")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.pageWidth").value(595.0))
+                .andExpect(jsonPath("$.data.pageHeight").value(841.0))
+                .andExpect(jsonPath("$.data.pageCount").value(2))
+                .andExpect(jsonPath("$.data.fields[2].key").value("claimantName"));
+        mockMvc.perform(get("/api/v1/portal/admin/tax/correction-request/template/pages/1")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"));
+        mockMvc.perform(get("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKLMNOPQRST/correction-fields")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_002"));
+
         String correctionBody = """
                 {"fields":{"claimantName":"Jane Doe","taxYear":"2025","estimatedRefundUsd":"120.00"}}
                 """;
-        mockMvc.perform(post("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKLMNOPQRST/correction-request.pdf")
+        mockMvc.perform(post("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKL/correction-request.pdf")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(correctionBody))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/pdf"));
 
-        mockMvc.perform(post("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKLMNOPQRST/approve")
+        mockMvc.perform(post("/api/v1/portal/admin/tax/refund-cases/TAX-ABCDEFGHIJKL/approve")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(correctionBody))
@@ -231,7 +247,7 @@ class PortalApiKeyControllerTest {
                 .andExpect(jsonPath("$.data.correctionPdfSha256").isNotEmpty());
 
         assertThat(taxRefundBackofficeService.sync(new TaxRefundCaseSyncRequest(
-                "TAX-ABCDEFGHIJKLMNOPQRST", "ACC-ABCDEFGHIJKL", "USR-ABCDEFGHIJKL", 2025, "US", "120.00",
+                "TAX-ABCDEFGHIJKL", "ACC-ABCDEFGHIJKL", "USR-ABCDEFGHIJKL", 2025, "US", "120.00",
                 true, true, List.of(), List.of(
                         new TaxRefundDocumentSnapshot("DOC-1", "RESIDENCE_CERTIFICATE", "residence.pdf", Map.of("taxpayer_name", "Jane Doe")),
                         new TaxRefundDocumentSnapshot("DOC-2", "APOSTILLE", "apostille.pdf", Map.of()),
