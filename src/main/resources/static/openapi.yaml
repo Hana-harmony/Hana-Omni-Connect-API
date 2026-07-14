@@ -101,9 +101,30 @@ paths:
         - name: caseId
           in: path
           required: true
-          schema: { type: string, pattern: "^TAX-[A-Z0-9]{20}$" }
+          schema: { type: string, pattern: "^TAX-[A-Z0-9]{12}$" }
       responses:
         "200": { description: Editable correction-request fields. }
+        "403": { description: ADMIN role required. }
+  /api/v1/portal/admin/tax/correction-request/template/layout:
+    get:
+      tags: [Portal]
+      security: [{ portalBearer: [] }]
+      summary: Return the trusted PDF page dimensions and editable field coordinates.
+      responses:
+        "200": { description: PDF editor layout derived from the server-side template. }
+        "403": { description: ADMIN role required. }
+  /api/v1/portal/admin/tax/correction-request/template/pages/{pageNumber}:
+    get:
+      tags: [Portal]
+      security: [{ portalBearer: [] }]
+      summary: Render a page of the trusted correction-request PDF as PNG.
+      parameters:
+        - name: pageNumber
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1, maximum: 2 }
+      responses:
+        "200": { description: PNG template page. }
         "403": { description: ADMIN role required. }
   /api/v1/portal/admin/tax/refund-cases/{caseId}/correction-request.pdf:
     post:
@@ -114,7 +135,7 @@ paths:
         - name: caseId
           in: path
           required: true
-          schema: { type: string, pattern: "^TAX-[A-Z0-9]{20}$" }
+          schema: { type: string, pattern: "^TAX-[A-Z0-9]{12}$" }
       responses:
         "200": { description: Persisted correction-request PDF. }
         "403": { description: ADMIN role required. }
@@ -127,7 +148,7 @@ paths:
         - name: caseId
           in: path
           required: true
-          schema: { type: string, pattern: "^TAX-[A-Z0-9]{20}$" }
+          schema: { type: string, pattern: "^TAX-[A-Z0-9]{12}$" }
       responses:
         "200": { description: Approved refund case. }
         "403": { description: ADMIN role required. }

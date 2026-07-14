@@ -1,5 +1,12 @@
 # 구현 기록
 
+## 2026-07-14 · 경정청구서 PDF 직접 편집 계약
+
+- Stock-exchange-BE가 발급하는 세무 신청 ID 규격인 `TAX-` + 영숫자 12자리를 OmniLens 동기화·관리자 API 전체에 동일하게 적용했다.
+- 메서드 경로 검증 예외를 공통 400 envelope으로 처리해 잘못된 ID가 `Internal server error`로 노출되지 않게 했다.
+- 서버의 신뢰된 2쪽 PDF 양식을 PNG로 렌더링하고, PDF 출력과 동일한 필드 좌표·크기·한글 라벨을 관리자 전용 API로 제공한다.
+- 웹 편집 입력과 최종 PDF 생성이 같은 좌표 목록을 사용하며 템플릿 페이지, 좌표, 12자리 실제 신청 ID를 통합 테스트로 고정했다.
+
 ## 2026-07-13 · Hana Montana AI(KF-DeBERTa + K-FNSPID) v3 문서 동기화
 
 - 서비스 모델명을 `Hana Montana AI(KF-DeBERTa + K-FNSPID)`로 통일했다.
