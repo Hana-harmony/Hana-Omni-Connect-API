@@ -30,6 +30,8 @@ import com.hana.omniconnect.market.application.InMemoryForeignOwnershipSnapshotC
 import com.hana.omniconnect.market.application.RedisExchangeRateCache;
 import com.hana.omniconnect.market.application.RedisForeignOwnershipSnapshotCache;
 import com.hana.omniconnect.provider.market.ForeignOwnershipSnapshot;
+import com.hana.omniconnect.config.ApiRateLimitProperties;
+import com.hana.omniconnect.security.ApiKeyRateLimiter;
 import com.hana.omniconnect.security.RedisApiSignatureNonceStore;
 
 @Testcontainers(disabledWithoutDocker = true)
@@ -75,6 +77,18 @@ class RedisIntegrationTest {
         assertThat(redisTemplate.getExpire(
                 "omni-connect:security:signature:nonce:fingerprint-a:nonce-a",
                 TimeUnit.SECONDS)).isPositive();
+
+        String staleRateLimitKey = "omni-connect:security:rate-limit:stale-fingerprint";
+        redisTemplate.opsForValue().set(staleRateLimitKey, "7");
+        assertThat(redisTemplate.getExpire(staleRateLimitKey, TimeUnit.MILLISECONDS)).isEqualTo(-1);
+
+        ApiKeyRateLimiter rateLimiter = new ApiKeyRateLimiter(
+                new ApiRateLimitProperties(true, 100, Duration.ofSeconds(60)),
+                redisTemplate);
+
+        assertThat(rateLimiter.consume("stale-fingerprint").allowed()).isTrue();
+        assertThat(redisTemplate.getExpire(staleRateLimitKey, TimeUnit.MILLISECONDS))
+                .isBetween(1L, 60_000L);
 
         RedisAlertDedupeStore dedupeStore = new RedisAlertDedupeStore(
                 redisTemplate,
