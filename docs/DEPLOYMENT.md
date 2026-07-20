@@ -73,6 +73,8 @@ REDIS_PORT=6379
 REDIS_USERNAME=omni_connect_app
 ```
 
+배포 시 Redis 컨테이너만 재생성하여 변경된 ACL을 확실히 다시 읽으며, 영속 데이터는 `hana-omni-connect-redis-data` 볼륨에 유지한다. Redis 자체 상태 점검도 `INFO`와 `PING`을 모두 실행하므로 애플리케이션 기동 전에 ACL 계약 위반을 차단한다.
+
 ## 선택 운영 변수
 - `SERVER_SSL_ENABLED`: Spring Boot TLS 활성화 여부. mTLS 사용 시 `true`로 설정한다.
 - `SERVER_SSL_CLIENT_AUTH`: client certificate 요청 모드. healthcheck 유지를 위해 mTLS 사용 시 `want`를 권장한다.
