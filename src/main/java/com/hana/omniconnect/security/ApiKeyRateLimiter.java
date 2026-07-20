@@ -16,10 +16,11 @@ public class ApiKeyRateLimiter {
     private static final long PACKING_FACTOR = 1_000_000_000L;
     private static final DefaultRedisScript<Long> CONSUME_SCRIPT = new DefaultRedisScript<>("""
             local current = redis.call('INCR', KEYS[1])
-            if current == 1 then
-              redis.call('PEXPIRE', KEYS[1], ARGV[1])
-            end
             local ttl = redis.call('PTTL', KEYS[1])
+            if current == 1 or ttl < 0 then
+              redis.call('PEXPIRE', KEYS[1], ARGV[1])
+              ttl = tonumber(ARGV[1])
+            end
             return current * 1000000000 + ttl
             """, Long.class);
 
