@@ -3,6 +3,7 @@ package com.hana.omniconnect.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
@@ -33,4 +34,16 @@ public class SchedulingConfiguration {
         return scheduler;
     }
 
+    @Bean(name = "alertCollectionExecutor")
+    public ThreadPoolTaskExecutor alertCollectionExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("omni-connect-alert-collection-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+        executor.initialize();
+        return executor;
+    }
 }
